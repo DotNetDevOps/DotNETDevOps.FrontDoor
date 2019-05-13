@@ -72,6 +72,6 @@ stages:
                 azureSubscription: 'Microsoft Partner Network(0fd7128b-5305-49da-a400-b7a37feb271c)'
                 appType: 'functionApp'
                 WebAppName: 'frontdoor-api'
-                package: '$(system.artifactsDirectory)/**/DotNETDevOps.FrontDoor.ApiFunction.zip'
+                package: '**/DotNETDevOps.FrontDoor.ApiFunction.zip'
                 enableCustomDeployment: true
                 DeploymentType: 'runFromZip'
