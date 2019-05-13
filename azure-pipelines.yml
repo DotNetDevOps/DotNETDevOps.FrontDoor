@@ -13,6 +13,7 @@ trigger:
 
 pr:
 - master
+- dev
 - releases/*
 
 pool:
