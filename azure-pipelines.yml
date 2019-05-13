@@ -45,6 +45,7 @@ steps:
     publishWebProjects: false
     projects: 'functions/**/*.csproj'
     configuration: '$(buildConfiguration)'
+    arguments: '--output $(Build.ArtifactStagingDirectory)'
 - task: PublishPipelineArtifact@0
   inputs:
     artifactName: 'drop'
