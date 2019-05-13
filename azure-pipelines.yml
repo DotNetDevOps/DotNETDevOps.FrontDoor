@@ -42,6 +42,7 @@ steps:
   displayName: Publish
   inputs:
     command: publish
+    publishWebProjects: false
     projects: 'functions/**/*.csproj'
     configuration: '$(buildConfiguration)'
 - task: PublishPipelineArtifact@0
