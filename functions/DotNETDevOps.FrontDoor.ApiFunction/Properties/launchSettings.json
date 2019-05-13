@@ -1,0 +1,24 @@
+{
+  "iisSettings": {
+    "windowsAuthentication": false,
+    "anonymousAuthentication": true,
+    "iisExpress": {
+      "applicationUrl": "http://localhost:56212/",
+      "sslPort": 44345
+    }
+  },
+  "profiles": {
+    "DotNETDevOps.FrontDoor.ApiFunction": {
+      "commandName": "Executable",
+      "executablePath": "C:\\Users\\pksor\\AppData\\Local\\AzureFunctionsTools\\Releases\\2.22.0\\cli\\func.exe",
+      "commandLineArgs": "host start --pause-on-error --port 5860"
+    },
+    "IIS Express": {
+      "commandName": "IISExpress",
+      "launchBrowser": true, "commandLineArgs": "test.dll", "executablePath": "dotnet", "workingDirectory": ".",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}

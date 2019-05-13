@@ -1,0 +1,16 @@
+{
+  "routes": [
+    {
+      "route": "= /",
+      "backend": "http://localhost:5861"
+    },
+    {
+      "route": "/",
+      "backend": "http://localhost:5861"
+    },
+    {
+      "route": "^~ /providers/DotNETDevOps",
+      "backend": "http://localhost:5860"
+    }
+  ]
+}
