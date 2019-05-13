@@ -13,35 +13,45 @@ trigger:
 
 pr:
 - master
+- dev
 - releases/*
 
-pool:
-  vmImage: 'windows-2019'
+stages:
+- stage: Build
+  jobs:
+  - job: Build
+    pool:
+      vmImage: 'windows-2019'
 
-variables:
-  buildConfiguration: 'Release'
+    variables:
+      buildConfiguration: 'Release'
 
-steps:
-# .NET Core
-# Restore NuGet packages.
-- task: DotNetCoreCLI@2
-  inputs:
-    command: 'restore'
-    projects: '**/*.csproj'
-    #verbosityRestore: 'detailed' # Options: quiet, minimal, normal, detailed, diagnostic
-- task: DotNetCoreCLI@2
-  displayName: Build
-  inputs:
-    command: build
-    projects: '**/*.csproj'
-    configuration: '$(buildConfiguration)'
-- task: DotNetCoreCLI@2
-  displayName: Publish
-  inputs:
-    command: publish
-    projects: 'functions/**/*.csproj'
-    configuration: '$(buildConfiguration)'
-- task: PublishPipelineArtifact@0
-  inputs:
-    artifactName: 'drop'
-    targetPath: '$(Build.ArtifactStagingDirectory)'
+
+    steps:
+    # .NET Core
+    # Restore NuGet packages.
+    - task: DotNetCoreCLI@2
+      inputs:
+        command: 'restore'
+        projects: '**/*.csproj'
+        feedsToUse: config
+        nugetConfigPath: nuget.config # you should always have a NuGet.config file!
+        #verbosityRestore: 'detailed' # Options: quiet, minimal, normal, detailed, diagnostic
+    - task: DotNetCoreCLI@2
+      displayName: Build
+      inputs:
+        command: build
+        projects: '**/*.csproj'
+        configuration: '$(buildConfiguration)'
+    - task: DotNetCoreCLI@2
+      displayName: Publish
+      inputs:
+        command: publish
+        publishWebProjects: false
+        projects: 'functions/**/*.csproj'
+        configuration: '$(buildConfiguration)'
+        arguments: '--output $(Build.ArtifactStagingDirectory)'
+    - task: PublishPipelineArtifact@0
+      inputs:
+        artifactName: 'drop'
+        targetPath: '$(Build.ArtifactStagingDirectory)'
