@@ -57,7 +57,7 @@ stages:
         targetPath: '$(Build.ArtifactStagingDirectory)'
 - stage: Publish
   jobs:
-  - deployment: DeployFunction
+  - deployment: Deploy Api Function
     pool:
       vmImage: 'windows-2019'
     variables:
@@ -73,5 +73,41 @@ stages:
                 appType: 'functionApp'
                 WebAppName: 'frontdoor-api'
                 package: '$(Pipeline.Workspace)/**/DotNETDevOps.FrontDoor.ApiFunction.zip'
+                enableCustomDeployment: true
+                DeploymentType: 'runFromZip'
+  - deployment: Deploy Front Function
+    pool:
+      vmImage: 'windows-2019'
+    variables:
+      buildConfiguration: 'Release'
+    environment: 'DotNETDevOps Front Door'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+            - task: AzureRmWebAppDeployment@4
+              inputs:
+                azureSubscription: 'Microsoft Partner Network(0fd7128b-5305-49da-a400-b7a37feb271c)'
+                appType: 'functionApp'
+                WebAppName: 'frontdoor-front'
+                package: '$(Pipeline.Workspace)/**/DotNETDevOps.FrontDoor.FrontFunction.zip'
+                enableCustomDeployment: true
+                DeploymentType: 'runFromZip'
+  - deployment: Deploy Router Function
+    pool:
+      vmImage: 'windows-2019'
+    variables:
+      buildConfiguration: 'Release'
+    environment: 'DotNETDevOps Front Door'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+            - task: AzureRmWebAppDeployment@4
+              inputs:
+                azureSubscription: 'Microsoft Partner Network(0fd7128b-5305-49da-a400-b7a37feb271c)'
+                appType: 'functionApp'
+                WebAppName: 'frontdoor-router'
+                package: '$(Pipeline.Workspace)/**/DotNETDevOps.FrontDoor.RouterFunction.zip'
                 enableCustomDeployment: true
                 DeploymentType: 'runFromZip'
