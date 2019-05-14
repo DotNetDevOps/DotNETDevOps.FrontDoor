@@ -19,6 +19,12 @@ namespace DotNETDevOps.FrontDoor.RouterFunction
 
     public class WebHostBuilderConfigurationBuilderExtension : IWebHostBuilderExtension, IWebJobsStartup
     {
+        private readonly IHostingEnvironment hostingEnvironment;
+
+        public WebHostBuilderConfigurationBuilderExtension(IHostingEnvironment hostingEnvironment)
+        {
+            this.hostingEnvironment = hostingEnvironment;
+        }
         public void Configure(IWebJobsBuilder builder)
         {
             builder.Services.AddSingleton<WebHostBuilderConfigurationBuilderExtension>();
@@ -33,7 +39,11 @@ namespace DotNETDevOps.FrontDoor.RouterFunction
         {
             builder.ConfigureAppConfiguration(ConfigureAppConfiguration);
             builder.ConfigureLogging(Logging);
-            builder.UseContentRoot(Path.Combine(Directory.GetCurrentDirectory(), "../../.."));
+
+            if (hostingEnvironment.IsDevelopment())
+            {
+                builder.UseContentRoot(Path.Combine(Directory.GetCurrentDirectory(), "../../.."));
+            }
            // builder.UseContentRoot();
             //   builder.UseContentRoot(Directory.GetCurrentDirectory());
             // builder.UseContentRoot();
@@ -53,13 +63,13 @@ namespace DotNETDevOps.FrontDoor.RouterFunction
 
 
     [WebHostBuilder(typeof(WebHostBuilderConfigurationBuilderExtension))]
-    public class ServerlessApi
+    public class ServerlessApiFunction
     {
 
 
-        private readonly IAspNetCoreRunner<ServerlessApi> aspNetCoreRunner;
+        private readonly IAspNetCoreRunner<ServerlessApiFunction> aspNetCoreRunner;
 
-        public ServerlessApi(IAspNetCoreRunner<ServerlessApi> aspNetCoreRunner)
+        public ServerlessApiFunction(IAspNetCoreRunner<ServerlessApiFunction> aspNetCoreRunner)
         {
             this.aspNetCoreRunner = aspNetCoreRunner;
         }

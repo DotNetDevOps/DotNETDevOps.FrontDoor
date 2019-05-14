@@ -2,15 +2,15 @@
   "routes": [
     {
       "route": "= /",
-      "backend": "http://localhost:5861"
+      "backend": "https://frontdoor-front.azurewebsites.net"
     },
     {
       "route": "/",
-      "backend": "http://localhost:5861"
+      "backend": "https://frontdoor-front.azurewebsites.net"
     },
     {
-      "route": "^~ /providers/DotNETDevOps",
-      "backend": "http://localhost:5860"
+      "route": "^~ /providers/DotNETDevOps.FrontDoor",
+      "backend": "https://frontdoor-api.azurewebsites.net"
     }
   ]
 }
