@@ -3,7 +3,10 @@
     "DotNETDevOps.FrontDoor.RouterFunction": {
       "commandName": "Executable",
       "executablePath": "C:\\Users\\pksor\\AppData\\Local\\AzureFunctionsTools\\Releases\\2.22.0\\cli\\func.exe",
-      "commandLineArgs": "host start --pause-on-error --port 5862"
+      "commandLineArgs": "host start --pause-on-error --port 5862",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
     }
   }
 }

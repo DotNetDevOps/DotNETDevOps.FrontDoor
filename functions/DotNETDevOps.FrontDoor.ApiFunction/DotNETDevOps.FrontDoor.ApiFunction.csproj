@@ -14,6 +14,9 @@
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\src\DotNETDevOps.FrontDoor.AspNetCore\DotNETDevOps.FrontDoor.AspNetCore.csproj" />
+  </ItemGroup>
+  <ItemGroup>
     <Content Update="host.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

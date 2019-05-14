@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using DotNETDevOps.FrontDoor.AspNetCore;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
@@ -25,11 +27,15 @@ namespace DotNETDevOps.FrontDoor.FrontFunction
             {
                 options.AddDefaultPolicy(o => o.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin());
             });
+
+            services.WithXForwardedHeaders();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
+ 
+
             if (!env.IsProduction())
             {
                 app.UseDeveloperExceptionPage();
@@ -55,7 +61,30 @@ namespace DotNETDevOps.FrontDoor.FrontFunction
 
             //app.UseMvc();
 
-            app.Run(h => h.Response.WriteAsync("Hello World"));
+            app.Run(WriteRequestInfo);
+        }
+
+        private async Task WriteRequestInfo(HttpContext context)
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine($"Request Url: {UriHelper.GetDisplayUrl( context.Request)}");
+            sb.AppendLine($"Request Method: {context.Request.Method}");
+            sb.AppendLine($"Status Code: {context.Response.StatusCode}");
+            sb.AppendLine($"Remote Address: {context.Connection.RemoteIpAddress}");
+            sb.AppendLine();
+            sb.AppendLine($"Request Headers:");
+            foreach(var headers in context.Request.Headers)
+            {
+                sb.AppendLine($"  {headers.Key}: {string.Join(",",headers.Value)}");
+            }
+
+            sb.AppendLine($"Response Headers:");
+            foreach (var headers in context.Response.Headers)
+            {
+                sb.AppendLine($"  {headers.Key}: {string.Join(",", headers.Value)}");
+            }
+
+            await context.Response.WriteAsync(sb.ToString());
         }
     }
 }

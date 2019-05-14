@@ -3,17 +3,23 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.28902.138
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotNETDevOps.FrontDoor.RouterFunction", "functions\DotNETDevOps.FrontDoor.RouterFunction\DotNETDevOps.FrontDoor.RouterFunction.csproj", "{110C0E6C-E5BB-4DF3-A1DE-E7A14C8E3630}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotNETDevOps.FrontDoor.RouterFunction", "functions\DotNETDevOps.FrontDoor.RouterFunction\DotNETDevOps.FrontDoor.RouterFunction.csproj", "{110C0E6C-E5BB-4DF3-A1DE-E7A14C8E3630}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotNETDevOps.FrontDoor.ApiFunction", "functions\DotNETDevOps.FrontDoor.ApiFunction\DotNETDevOps.FrontDoor.ApiFunction.csproj", "{415670F8-427A-43B7-A16E-664AE8ACBD00}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotNETDevOps.FrontDoor.FrontFunction", "functions\DotNETDevOps.FrontDoor.FrontFunction\DotNETDevOps.FrontDoor.FrontFunction.csproj", "{B405BE16-A9C2-4337-8A09-3CF92001765F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotNETDevOps.FrontDoor.FrontFunction", "functions\DotNETDevOps.FrontDoor.FrontFunction\DotNETDevOps.FrontDoor.FrontFunction.csproj", "{B405BE16-A9C2-4337-8A09-3CF92001765F}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{36A6D7D2-C0CD-4A39-9E34-78D34406BA4C}"
 	ProjectSection(SolutionItems) = preProject
 		global.json = global.json
 		nuget.config = nuget.config
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotNETDevOps.FrontDoor.AspNetCore", "src\DotNETDevOps.FrontDoor.AspNetCore\DotNETDevOps.FrontDoor.AspNetCore.csproj", "{D9D4A5E1-8DFF-41E8-ADB5-9A481CECA20E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "functions", "functions", "{930C37AA-BD4C-413B-B38F-6A5EB6F8FC4C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{D6F70DCD-930A-4615-9492-7181C653C928}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,9 +39,19 @@ Global
 		{B405BE16-A9C2-4337-8A09-3CF92001765F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B405BE16-A9C2-4337-8A09-3CF92001765F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B405BE16-A9C2-4337-8A09-3CF92001765F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D9D4A5E1-8DFF-41E8-ADB5-9A481CECA20E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D9D4A5E1-8DFF-41E8-ADB5-9A481CECA20E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D9D4A5E1-8DFF-41E8-ADB5-9A481CECA20E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D9D4A5E1-8DFF-41E8-ADB5-9A481CECA20E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{110C0E6C-E5BB-4DF3-A1DE-E7A14C8E3630} = {930C37AA-BD4C-413B-B38F-6A5EB6F8FC4C}
+		{415670F8-427A-43B7-A16E-664AE8ACBD00} = {930C37AA-BD4C-413B-B38F-6A5EB6F8FC4C}
+		{B405BE16-A9C2-4337-8A09-3CF92001765F} = {930C37AA-BD4C-413B-B38F-6A5EB6F8FC4C}
+		{D9D4A5E1-8DFF-41E8-ADB5-9A481CECA20E} = {D6F70DCD-930A-4615-9492-7181C653C928}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {057AC727-D076-4D2B-B50E-F0F36EFB8BFB}

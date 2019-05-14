@@ -9,10 +9,24 @@ using Microsoft.AspNetCore.Builder;
 using ProxyKit;
 using Newtonsoft.Json.Linq;
 using System.Net.Http;
-
+using System;
 
 namespace DotNETDevOps.FrontDoor.RouterFunction
 {
+    public static class CorrelationIdExtensions
+    {
+        public const string XCorrelationId = "X-Correlation-ID";
+
+        public static ForwardContext ApplyCorrelationId(this ForwardContext forwardContext)
+        {
+            if (!forwardContext.UpstreamRequest.Headers.Contains(XCorrelationId))
+            {
+                forwardContext.UpstreamRequest.Headers.Add(XCorrelationId, Guid.NewGuid().ToString());
+            }
+            return forwardContext;
+        }
+    }
+
     public class Startup
     {
         private readonly IHostingEnvironment hostingEnvironment;
@@ -45,10 +59,15 @@ namespace DotNETDevOps.FrontDoor.RouterFunction
         {
             var config = context.Features.Get<RouteConfig>();
 
-            return context
+            var response= context
                      .ForwardTo(config.Backend)
+                     .CopyXForwardedHeaders()
                      .AddXForwardedHeaders()
+                     .ApplyCorrelationId()
                      .Send();
+
+
+            return response;
         }
 
         private bool MatchRoutes(HttpContext arg)
