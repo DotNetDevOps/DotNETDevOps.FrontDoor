@@ -55,7 +55,7 @@ namespace DotNETDevOps.FrontDoor.FrontFunction
 
             //app.UseMvc();
 
-            app.Run(h => h.Response.WriteAsync("Hello Wordl"));
+            app.Run(h => h.Response.WriteAsync("Hello World"));
         }
     }
 }

@@ -10,8 +10,6 @@ using ProxyKit;
 using Newtonsoft.Json.Linq;
 using System.Net.Http;
 
-[assembly: WebJobsStartup(typeof(AspNetCoreWebHostStartUp))]
-[assembly: WebJobsStartup(typeof(DotNETDevOps.FrontDoor.RouterFunction.WebHostBuilderConfigurationBuilderExtension))]
 
 namespace DotNETDevOps.FrontDoor.RouterFunction
 {
@@ -26,8 +24,9 @@ namespace DotNETDevOps.FrontDoor.RouterFunction
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddProxy();
-            var routes = JToken.Parse(File.ReadAllText($"routes.{hostingEnvironment.EnvironmentName.ToLower()}.json".Replace(".production",""))).ToObject<RouteRoot>();
-
+                
+            var routes = JToken.Parse(File.ReadAllText(Path.Combine(this.hostingEnvironment.ContentRootPath, $"routes.{hostingEnvironment.EnvironmentName.ToLower()}.json".Replace(".production","")))).ToObject<RouteOptions>();
+          
             services.AddSingleton(new RouteMatcher(routes));
         }
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)

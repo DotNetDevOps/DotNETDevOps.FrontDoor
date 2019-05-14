@@ -7,36 +7,42 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Azure.WebJobs.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.IO;
 using System.Threading.Tasks;
 
 [assembly: WebJobsStartup(typeof(AspNetCoreWebHostStartUp))]
-[assembly: WebJobsStartup(typeof(DotNETDevOps.FrontDoor.RouterFunction.WebHostBuilderConfigurationBuilderExtension))]
+[assembly: WebJobsStartup(typeof(DotNETDevOps.FrontDoor.RouterFunction.WebJobsStartup))]
 
 namespace DotNETDevOps.FrontDoor.RouterFunction
 {
-
-    public class WebHostBuilderConfigurationBuilderExtension : IWebHostBuilderExtension, IWebJobsStartup
+    public class WebJobsStartup : IWebJobsStartup
     {
-        private readonly IHostingEnvironment hostingEnvironment;
-
-        public WebHostBuilderConfigurationBuilderExtension(IHostingEnvironment hostingEnvironment)
-        {
-            this.hostingEnvironment = hostingEnvironment;
-        }
         public void Configure(IWebJobsBuilder builder)
         {
             builder.Services.AddSingleton<WebHostBuilderConfigurationBuilderExtension>();
+             
         }
+    }
+    public class WebHostBuilderConfigurationBuilderExtension : IWebHostBuilderExtension
+    {
+        private readonly Microsoft.Extensions.Hosting.IHostingEnvironment hostingEnvironment;
+
+        public WebHostBuilderConfigurationBuilderExtension(Microsoft.Extensions.Hosting.IHostingEnvironment hostingEnvironment)
+        {
+            this.hostingEnvironment = hostingEnvironment;
+        }
+      
 
         public void ConfigureAppConfiguration(WebHostBuilderContext context, IConfigurationBuilder builder)
         {
-            //builder.AddJsonFile("appsettings.json");
+           
         }
 
         public void ConfigureWebHostBuilder(WebHostBuilder builder)
         {
+          
             builder.ConfigureAppConfiguration(ConfigureAppConfiguration);
             builder.ConfigureLogging(Logging);
 

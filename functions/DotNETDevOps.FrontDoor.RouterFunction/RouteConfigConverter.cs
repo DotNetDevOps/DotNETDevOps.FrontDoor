@@ -4,8 +4,7 @@ using DotNETDevOps.Extensions.AzureFunctions;
 using Microsoft.Azure.WebJobs.Hosting;
 using Newtonsoft.Json.Linq;
 
-[assembly: WebJobsStartup(typeof(AspNetCoreWebHostStartUp))]
-[assembly: WebJobsStartup(typeof(DotNETDevOps.FrontDoor.RouterFunction.WebHostBuilderConfigurationBuilderExtension))]
+
 
 namespace DotNETDevOps.FrontDoor.RouterFunction
 {

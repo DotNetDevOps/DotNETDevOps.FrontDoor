@@ -1,16 +1,18 @@
 {
-  "routes": [
-    {
-      "route": "= /",
-      "backend": "https://frontdoor-front.azurewebsites.net"
-    },
-    {
-      "route": "/",
-      "backend": "https://frontdoor-front.azurewebsites.net"
-    },
-    {
-      "route": "^~ /providers/DotNETDevOps.FrontDoor",
-      "backend": "https://frontdoor-api.azurewebsites.net"
-    }
-  ]
+   
+    "routes": [
+      {
+        "route": "= /",
+        "backend": "https://frontdoor-front.azurewebsites.net"
+      },
+      {
+        "route": "/",
+        "backend": "https://frontdoor-front.azurewebsites.net"
+      },
+      {
+        "route": "^~ /providers/DotNETDevOps.FrontDoor",
+        "backend": "https://frontdoor-api.azurewebsites.net"
+      }
+    ]
+  
 }

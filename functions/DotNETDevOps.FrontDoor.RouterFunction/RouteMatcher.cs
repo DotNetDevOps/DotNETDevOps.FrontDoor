@@ -4,24 +4,25 @@ using DotNETDevOps.Extensions.AzureFunctions;
 using Microsoft.Azure.WebJobs.Hosting;
 using System.Linq;
 using System.Collections.Generic;
+using Microsoft.Extensions.Options;
 
-[assembly: WebJobsStartup(typeof(AspNetCoreWebHostStartUp))]
-[assembly: WebJobsStartup(typeof(DotNETDevOps.FrontDoor.RouterFunction.WebHostBuilderConfigurationBuilderExtension))]
+
 
 namespace DotNETDevOps.FrontDoor.RouterFunction
 {
     public class RouteMatcher
     {
-        private RouteRoot routeConfiguration;
+        private RouteOptions routeConfiguration;
         private List<RouteConfig> routes = new List<RouteConfig>();
 
-        public RouteMatcher(RouteRoot routes)
+        public RouteMatcher(RouteOptions routes)
         {
             this.routeConfiguration = routes;
-            this.routes.AddRange(routes.Routes.OfType<ExactRoute>());
-            this.routes.AddRange(routes.Routes.OfType<PrefixRoute>().Where(k => k.StopOnMatch));
-            this.routes.AddRange(routes.Routes.OfType<PrefixRoute>().Where(k => !k.StopOnMatch));
-            this.routes.AddRange(routes.Routes.OfType<RegexRoute>());
+
+            this.routes.AddRange(this.routeConfiguration.Routes.OfType<ExactRoute>());
+            this.routes.AddRange(this.routeConfiguration.Routes.OfType<PrefixRoute>().Where(k => k.StopOnMatch));
+            this.routes.AddRange(this.routeConfiguration.Routes.OfType<PrefixRoute>().Where(k => !k.StopOnMatch));
+            this.routes.AddRange(this.routeConfiguration.Routes.OfType<RegexRoute>());
             
 
         }

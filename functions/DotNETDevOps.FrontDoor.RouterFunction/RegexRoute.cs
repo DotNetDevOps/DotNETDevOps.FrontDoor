@@ -2,8 +2,7 @@
 using Microsoft.Azure.WebJobs.Hosting;
 using System.Text.RegularExpressions;
 
-[assembly: WebJobsStartup(typeof(AspNetCoreWebHostStartUp))]
-[assembly: WebJobsStartup(typeof(DotNETDevOps.FrontDoor.RouterFunction.WebHostBuilderConfigurationBuilderExtension))]
+
 
 namespace DotNETDevOps.FrontDoor.RouterFunction
 {
