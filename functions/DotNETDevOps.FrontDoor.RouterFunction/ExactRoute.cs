@@ -6,7 +6,7 @@ using Microsoft.Azure.WebJobs.Hosting;
 
 namespace DotNETDevOps.FrontDoor.RouterFunction
 {
-    public class ExactRoute : RouteConfig
+    public class ExactRoute : BaseRoute
     {
         public string Prefix { get; private set; }
         public override void Initialize()

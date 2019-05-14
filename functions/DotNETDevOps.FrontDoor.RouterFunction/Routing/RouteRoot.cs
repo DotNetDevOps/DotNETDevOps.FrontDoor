@@ -6,6 +6,6 @@ namespace DotNETDevOps.FrontDoor.RouterFunction
 {
     public class RouteOptions
     {
-        public RouteConfig[] Routes{get;set;}
+        public BaseRoute[] Routes{get;set;}
     }
 }

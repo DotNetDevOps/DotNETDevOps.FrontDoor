@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 
 namespace DotNETDevOps.FrontDoor.RouterFunction
 {
-    public class RegexRoute : RouteConfig
+    public class RegexRoute : BaseRoute
     {
         private Regex _regex;
         public override void Initialize()

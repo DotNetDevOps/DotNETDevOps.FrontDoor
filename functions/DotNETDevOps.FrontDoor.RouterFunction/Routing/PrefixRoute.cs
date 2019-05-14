@@ -5,7 +5,7 @@ using Microsoft.Azure.WebJobs.Hosting;
 
 namespace DotNETDevOps.FrontDoor.RouterFunction
 {
-    public class PrefixRoute : RouteConfig
+    public class PrefixRoute : BaseRoute
     {
         public string Prefix { get; private set; }
         

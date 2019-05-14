@@ -55,6 +55,9 @@ namespace DotNETDevOps.FrontDoor.FrontFunction
                 });
             }
 
+
+            
+
             //app.UseCors();
             //app.UseStaticFiles();
 
@@ -67,6 +70,7 @@ namespace DotNETDevOps.FrontDoor.FrontFunction
         private async Task WriteRequestInfo(HttpContext context)
         {
             var sb = new StringBuilder();
+            sb.AppendLine("Unknown Domain:");
             sb.AppendLine($"Request Url: {UriHelper.GetDisplayUrl( context.Request)}");
             sb.AppendLine($"Request Method: {context.Request.Method}");
             sb.AppendLine($"Status Code: {context.Response.StatusCode}");

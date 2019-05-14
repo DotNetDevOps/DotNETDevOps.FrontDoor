@@ -13,7 +13,7 @@ namespace DotNETDevOps.FrontDoor.RouterFunction
     public class RouteMatcher
     {
         private RouteOptions routeConfiguration;
-        private List<RouteConfig> routes = new List<RouteConfig>();
+        private List<BaseRoute> routes = new List<BaseRoute>();
 
         public RouteMatcher(RouteOptions routes)
         {
@@ -27,11 +27,14 @@ namespace DotNETDevOps.FrontDoor.RouterFunction
 
         }
 
-        internal RouteConfig FindMatch(HttpContext arg)
+        internal BaseRoute FindMatch(HttpContext arg)
         {
-            RouteConfig found = null;
+            BaseRoute found = null;
             foreach (var route in routes)
             {
+                if (!route.Hostnames.Contains(arg.Request.Host.Host,StringComparer.OrdinalIgnoreCase))
+                    continue;
+
                 if (route.IsMatch(arg.Request.Path))
                 {
                     if(route.StopOnMatch)

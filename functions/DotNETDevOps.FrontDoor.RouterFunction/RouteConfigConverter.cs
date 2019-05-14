@@ -18,7 +18,7 @@ namespace DotNETDevOps.FrontDoor.RouterFunction
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
             var obj = JToken.ReadFrom(reader);
-            RouteConfig route = null;
+            BaseRoute route = null;
             var routeStr = obj.SelectToken("$.route").ToString();
             if (routeStr.StartsWith("="))
             {

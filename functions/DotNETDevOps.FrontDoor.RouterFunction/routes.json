@@ -1,18 +1,20 @@
 {
-   
-    "routes": [
-      {
-        "route": "= /",
-        "backend": "https://frontdoor-front.azurewebsites.net"
-      },
-      {
-        "route": "/",
-        "backend": "https://frontdoor-front.azurewebsites.net"
-      },
-      {
-        "route": "^~ /providers/DotNETDevOps.FrontDoor",
-        "backend": "https://frontdoor-api.azurewebsites.net"
-      }
-    ]
-  
+  "routes": [
+    {
+      "backend": "https://dotnetdevops-www.azurewebsites.net",
+      "hostnames": [ "dotnetdevops.org", "www.dotnetdevops.org" ],
+      "route": "= /"
+    },
+    {
+      "route": "/",
+      "backend": "https://dotnetdevops-www.azurewebsites.net",
+      "hostnames": [ "dotnetdevops.org", "www.dotnetdevops.org" ]
+    },
+    {
+      "route": "^~ /providers/DotNETDevOps.FrontDoor",
+      "backend": "https://frontdoor-api.azurewebsites.net",
+      "hostnames": [ "management.dotnetdevops.org" ]
+    }
+  ]
+
 }

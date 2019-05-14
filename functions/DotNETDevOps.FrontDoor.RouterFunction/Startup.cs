@@ -47,25 +47,40 @@ namespace DotNETDevOps.FrontDoor.RouterFunction
         {
             app.UseDeveloperExceptionPage();
 
-           
+
+            //Use the configuration router          
 
             app.UseWhen(
                     MatchRoutes,
                     appInner => appInner.RunProxy(BuildProxy));
 
+
+            //Route everything else to frontdoor frontend
+
+            app.RunProxy(context => context
+                .ForwardTo("https://frontdoor-front.azurewebsites.net")
+                 .CopyXForwardedHeaders()
+                     .AddXForwardedHeaders()
+                     .ApplyCorrelationId()
+                .Send());
+
+
+
         }
 
-        private Task<HttpResponseMessage> BuildProxy(HttpContext context)
+        private async Task<HttpResponseMessage> BuildProxy(HttpContext context)
         {
-            var config = context.Features.Get<RouteConfig>();
+            var config = context.Features.Get<BaseRoute>();
 
-            var response= context
+            var response= await context
                      .ForwardTo(config.Backend)
                      .CopyXForwardedHeaders()
                      .AddXForwardedHeaders()
                      .ApplyCorrelationId()
                      .Send();
 
+           // response.Headers.Remove("X-ARR-SSL");
+           // response.Headers.Remove("X-AppService-Proto");
 
             return response;
         }
