@@ -55,7 +55,7 @@ namespace DotNETDevOps.FrontDoor.RouterFunction
     [WebHostBuilder(typeof(WebHostBuilderConfigurationBuilderExtension))]
     public class ServerlessApi
     {
-      
+
 
         private readonly IAspNetCoreRunner<ServerlessApi> aspNetCoreRunner;
 
@@ -66,7 +66,7 @@ namespace DotNETDevOps.FrontDoor.RouterFunction
 
         [FunctionName("AspNetCoreHost")]
         public Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, Route = "{*all}")]HttpRequest req, ExecutionContext executionContext)
-            => aspNetCoreRunner.RunAsync<Startup>(req, executionContext);
+            [HttpTrigger(AuthorizationLevel.Anonymous, Route = "{*all}")]HttpRequest req, ExecutionContext executionContext,ILogger log)
+            { log.LogWarning($"{executionContext.FunctionAppDirectory} {executionContext.FunctionDirectory} {executionContext.FunctionName} {executionContext.InvocationId}"); return aspNetCoreRunner.RunAsync<Startup>(req, executionContext); }
     }
 }

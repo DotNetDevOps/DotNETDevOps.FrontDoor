@@ -25,7 +25,7 @@ namespace DotNETDevOps.FrontDoor.RouterFunction
         }
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
-           
+            app.UseDeveloperExceptionPage();
 
            
 
