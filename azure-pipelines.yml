@@ -57,7 +57,7 @@ stages:
         targetPath: '$(Build.ArtifactStagingDirectory)'
 - stage: Publish
   jobs:
-  - deployment: Deploy Api Function
+  - deployment: DeployApiFunction
     pool:
       vmImage: 'windows-2019'
     variables:
@@ -75,7 +75,7 @@ stages:
                 package: '$(Pipeline.Workspace)/**/DotNETDevOps.FrontDoor.ApiFunction.zip'
                 enableCustomDeployment: true
                 DeploymentType: 'runFromZip'
-  - deployment: Deploy Front Function
+  - deployment: DeployFrontFunction
     pool:
       vmImage: 'windows-2019'
     variables:
@@ -93,7 +93,7 @@ stages:
                 package: '$(Pipeline.Workspace)/**/DotNETDevOps.FrontDoor.FrontFunction.zip'
                 enableCustomDeployment: true
                 DeploymentType: 'runFromZip'
-  - deployment: Deploy Router Function
+  - deployment: DeployRouterFunction
     pool:
       vmImage: 'windows-2019'
     variables:
