@@ -17,10 +17,17 @@ namespace DotNETDevOps.FrontDoor.RouterFunction
 {
     public class Startup
     {
+        private readonly IHostingEnvironment hostingEnvironment;
+
+        public Startup(IHostingEnvironment hostingEnvironment)
+        {
+            this.hostingEnvironment = hostingEnvironment;
+        }
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddProxy();
-            var routes = JToken.Parse(File.ReadAllText("routes.json")).ToObject<RouteRoot>();
+            var routes = JToken.Parse(File.ReadAllText($"routes.{hostingEnvironment.EnvironmentName.ToLower()}.json".Replace(".production",""))).ToObject<RouteRoot>();
+
             services.AddSingleton(new RouteMatcher(routes));
         }
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
