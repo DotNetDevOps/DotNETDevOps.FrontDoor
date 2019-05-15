@@ -1,7 +1,6 @@
 {
-  "name": "vue-black-dashboard",
+  "name": "frontdoor--front",
   "version": "1.0.0-pre",
-  "libName": "frontdoor--front",
   "private": true,
   "description": "A sample admin dashboard based on black dashboard UI template",
   "author": "cristian.jora <joracristi@gmail.com>",
