@@ -7,11 +7,38 @@
           "weigth": 1
         }
       ]
+    },
+    "dotnetdevops-www": {
+      "servers": [
+        {
+          "host": "dotnetdevops-www.azurewebsites.net",
+          "weigth": 1
+        }
+      ]
     }
+
   },
   "servers": [
     {
       "locations": [
+        {
+          "route": "= /",
+          "proxy_pass": "http://dotnetdevops-www/",
+          "features": {
+            "CopyXForwardedHeaders": true,
+            "AddXForwardedHeaders": true,
+            "ApplyCorrelationId": true
+          }
+        },
+        {
+          "route": "/",
+          "proxy_pass": "http://dotnetdevops-www/",
+          "features": {
+            "CopyXForwardedHeaders": true,
+            "AddXForwardedHeaders": true,
+            "ApplyCorrelationId": true
+          }
+        },
         {
           "route": "= /frontdoor/",
           "proxy_pass": "http://dotnetdevops-cdn/libs/frontdoor--front/1.0.0-ci-20190515.07/index.html",

@@ -32,7 +32,7 @@ namespace DotNETDevOps.FrontDoor.RouterFunction
 
             this.routes = new Dictionary<string, BaseRoute[]>( routeConfiguration.Servers
                 .SelectMany(k => k.Hostnames.Select(h => new { hostname = h, server = k }))
-                .ToLookup(k => k.hostname, v => v.server).ToDictionary(k=>k.Key,v=>v.SelectMany(k=>k.Locations).OrderBy(k=>k.Precedence).ToArray()),StringComparer.OrdinalIgnoreCase);
+                .ToLookup(k => k.hostname, v => v.server).ToDictionary(k=>k.Key,v=>v.SelectMany(k=>k.Locations).OrderBy(k=>k.Precedence).ThenBy(k=>k.RelativePrecedence).ToArray()),StringComparer.OrdinalIgnoreCase);
 
 
 

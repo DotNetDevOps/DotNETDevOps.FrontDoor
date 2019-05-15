@@ -9,6 +9,7 @@ namespace DotNETDevOps.FrontDoor.RouterFunction
     public class PrefixRoute : BaseRoute
     {
         public override int Precedence => StopOnMatch ? 10 : 100;
+        
 
         public string Prefix { get; private set; }
         
@@ -24,6 +25,7 @@ namespace DotNETDevOps.FrontDoor.RouterFunction
                 Prefix = Route.TrimStart();
                
             }
+            RelativePrecedence = -Prefix.Length;
         }
 
         public override bool IsMatch(string url)

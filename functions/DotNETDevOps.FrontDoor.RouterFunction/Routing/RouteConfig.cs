@@ -11,6 +11,7 @@ namespace DotNETDevOps.FrontDoor.RouterFunction
     public abstract class BaseRoute
     {
         public abstract int Precedence { get; }
+        public int RelativePrecedence { get; protected set; } = 0;
         public string Route { get; set; }
 
         [JsonProperty("proxy_pass")]
