@@ -96,7 +96,7 @@ namespace DotNETDevOps.FrontDoor.RouterFunction
                 if (ctx.WebSockets.IsWebSocketRequest)
                 {
                     var config = ctx.Features.Get<BaseRoute>();
-                    var host = new Uri(config.Backend);
+                    var host = new Uri(config.ProxyPass);
 
                     await WebSocketHelpers.AcceptProxyWebSocketRequest(ctx, new Uri((ctx.Request.IsHttps ? "wss://":"ws://")+ host.Host+(host.IsDefaultPort?"": ":"+host.Port) + ctx.Request.GetEncodedPathAndQuery()));
                     //var webSocket = await ctx.WebSockets.AcceptWebSocketAsync();
@@ -117,22 +117,15 @@ namespace DotNETDevOps.FrontDoor.RouterFunction
 
 
 
-            var forwarded = context
-                     .ForwardTo(config.Backend)
-                     .CopyXForwardedHeaders()
-                     .AddXForwardedHeaders()
-                     .ApplyCorrelationId();
+          
 
-
+            var forwarded = config.Forward(context);
 
 
             var response = await forwarded
                      .Send();
 
-            if (context.Request.Path.StartsWithSegments("/sockjs-node"))
-            {
-                Console.WriteLine($"Proxy {response.StatusCode}: {context.Request.GetDisplayUrl()} => {config.Backend}/{context.Request.Path}");
-            }
+           
             // response.Headers.Remove("X-ARR-SSL");
             // response.Headers.Remove("X-AppService-Proto");
 

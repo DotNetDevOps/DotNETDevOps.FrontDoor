@@ -1,19 +1,37 @@
 {
-  "routes": [
+  "upstreams": {
+    "dotnetdevops-cdn": {
+      "servers": [
+        {
+          "host": "dotnetdevops.blob.core.windows.net",
+          "weigth": 1
+        }
+      ]
+    }
+  },
+  "servers": [
     {
-      "backend": "https://dotnetdevops-www.azurewebsites.net",
-      "hostnames": [ "dotnetdevops.org", "www.dotnetdevops.org" ],
-      "route": "= /"
-    },
-    {
-      "route": "/",
-      "backend": "https://dotnetdevops-www.azurewebsites.net",
-      "hostnames": [ "dotnetdevops.org", "www.dotnetdevops.org" ]
-    },
-    {
-      "route": "^~ /providers/DotNETDevOps.FrontDoor",
-      "backend": "https://frontdoor-api.azurewebsites.net",
-      "hostnames": [ "management.dotnetdevops.org" ]
+      "locations": [
+        {
+          "route": "= /frontdoor/",
+          "proxy_pass": "http://dotnetdevops-cdn/libs/frontdoor--front/1.0.0-ci-20190515.07/index.html",
+          "features": {
+            "CopyXForwardedHeaders": true,
+            "AddXForwardedHeaders": true,
+            "ApplyCorrelationId": true
+          }
+        },
+        {
+          "route": "/frontdoor/",
+          "proxy_pass": "http://dotnetdevops-cdn/libs/frontdoor--front/1.0.0-ci-20190515.07/",
+          "features": {
+            "CopyXForwardedHeaders": true,
+            "AddXForwardedHeaders": true,
+            "ApplyCorrelationId": true
+          }
+        }
+      ],
+      "hostnames": [ "dotnetdevops.org", "www.dotnetdevops.org", "localhost" ]
     }
   ]
 

@@ -17,15 +17,17 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		nuget.config = nuget.config
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotNETDevOps.FrontDoor.AspNetCore", "src\DotNETDevOps.FrontDoor.AspNetCore\DotNETDevOps.FrontDoor.AspNetCore.csproj", "{D9D4A5E1-8DFF-41E8-ADB5-9A481CECA20E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotNETDevOps.FrontDoor.AspNetCore", "src\DotNETDevOps.FrontDoor.AspNetCore\DotNETDevOps.FrontDoor.AspNetCore.csproj", "{D9D4A5E1-8DFF-41E8-ADB5-9A481CECA20E}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "functions", "functions", "{930C37AA-BD4C-413B-B38F-6A5EB6F8FC4C}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{D6F70DCD-930A-4615-9492-7181C653C928}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotNETDevOps.FrontDoor.FrontApp", "apps\DotNETDevOps.FrontDoor.FrontApp\DotNETDevOps.FrontDoor.FrontApp.csproj", "{5A55A37E-C342-4B2B-B9D2-EFECC1FA58D2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotNETDevOps.FrontDoor.FrontApp", "apps\DotNETDevOps.FrontDoor.FrontApp\DotNETDevOps.FrontDoor.FrontApp.csproj", "{5A55A37E-C342-4B2B-B9D2-EFECC1FA58D2}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "apps", "apps", "{B42A99B8-DA38-4313-9ED7-DE80CE3735E5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotNETDevOps.FrontDoor.UnitTests", "test\DotNETDevOps.FrontDoor.UnitTests\DotNETDevOps.FrontDoor.UnitTests.csproj", "{C3258E80-30CD-4704-91E7-EB31247639BB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -53,6 +55,10 @@ Global
 		{5A55A37E-C342-4B2B-B9D2-EFECC1FA58D2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5A55A37E-C342-4B2B-B9D2-EFECC1FA58D2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5A55A37E-C342-4B2B-B9D2-EFECC1FA58D2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C3258E80-30CD-4704-91E7-EB31247639BB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C3258E80-30CD-4704-91E7-EB31247639BB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C3258E80-30CD-4704-91E7-EB31247639BB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C3258E80-30CD-4704-91E7-EB31247639BB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

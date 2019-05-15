@@ -8,6 +8,8 @@ namespace DotNETDevOps.FrontDoor.RouterFunction
 {
     public class RegexRoute : BaseRoute
     {
+        public override int Precedence => 1000;
+
         private Regex _regex;
         public override void Initialize()
         {

@@ -1,19 +1,38 @@
 {
-  "routes": [
+  "upstreams": {
+    "dotnetdevops-cdn": {
+      "servers": [
+        {
+          "host": "dotnetdevops.blob.core.windows.net",
+          "weigth": 1
+        }
+      ]
+    }
+  },
+  "servers": [
     {
-      "route": "= /",
-      "hostnames": [ "localhost" ],
-      "backend": "http://localhost:8080"
-    },
-    {
-      "route": "/",
-      "hostnames": [ "localhost" ],
-      "backend": "http://localhost:8080"
-    },
-    {
-      "route": "^~ /providers/DotNETDevOps.FrontDoor",
-      "hostnames": [ "localhost" ],
-      "backend": "http://localhost:5860"
+      "locations": [
+        {
+          "route": "= /frontdoor/",
+          "proxy_pass": "http://dotnetdevops-cdn/libs/frontdoor--front/1.0.0-ci-20190515.07/index.html",
+          "features": {
+            "CopyXForwardedHeaders": true,
+            "AddXForwardedHeaders": true,
+            "ApplyCorrelationId": true
+          }
+        },
+        {
+          "route": "/frontdoor/",
+          "proxy_pass": "http://dotnetdevops-cdn/libs/frontdoor--front/1.0.0-ci-20190515.07/",
+          "features": {
+            "CopyXForwardedHeaders": true,
+            "AddXForwardedHeaders": true,
+            "ApplyCorrelationId": true
+          }
+        }
+      ],
+      "hostnames": [ "dotnetdevops.org", "www.dotnetdevops.org", "localhost" ]
     }
   ]
+
 }

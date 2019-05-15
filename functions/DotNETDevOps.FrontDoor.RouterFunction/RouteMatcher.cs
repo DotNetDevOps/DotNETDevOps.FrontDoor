@@ -13,16 +13,34 @@ namespace DotNETDevOps.FrontDoor.RouterFunction
     public class RouteMatcher
     {
         private RouteOptions routeConfiguration;
-        private List<BaseRoute> routes = new List<BaseRoute>();
+        // private List<BaseRoute> routes = new List<BaseRoute>();
+        private Dictionary<string, BaseRoute[]> routes;
+
 
         public RouteMatcher(RouteOptions routes)
         {
             this.routeConfiguration = routes;
 
-            this.routes.AddRange(this.routeConfiguration.Routes.OfType<ExactRoute>());
-            this.routes.AddRange(this.routeConfiguration.Routes.OfType<PrefixRoute>().Where(k => k.StopOnMatch));
-            this.routes.AddRange(this.routeConfiguration.Routes.OfType<PrefixRoute>().Where(k => !k.StopOnMatch));
-            this.routes.AddRange(this.routeConfiguration.Routes.OfType<RegexRoute>());
+            var locations = this.routeConfiguration.Servers.SelectMany(k => k.Locations).ToList();
+            foreach(var server in routeConfiguration.Servers)
+            {
+                foreach(var location in server.Locations)
+                {
+                    location.SetServer(routeConfiguration.Upstreams,server);
+                }
+            }
+
+            this.routes = new Dictionary<string, BaseRoute[]>( routeConfiguration.Servers
+                .SelectMany(k => k.Hostnames.Select(h => new { hostname = h, server = k }))
+                .ToLookup(k => k.hostname, v => v.server).ToDictionary(k=>k.Key,v=>v.SelectMany(k=>k.Locations).OrderBy(k=>k.Precedence).ToArray()),StringComparer.OrdinalIgnoreCase);
+
+
+
+
+         //   this.routes.AddRange(locations.OfType<ExactRoute>());
+         //   this.routes.AddRange(locations.OfType<PrefixRoute>().Where(k => k.StopOnMatch));
+         //   this.routes.AddRange(locations.OfType<PrefixRoute>().Where(k => !k.StopOnMatch));
+         //   this.routes.AddRange(locations.OfType<RegexRoute>());
             
 
         }
@@ -30,20 +48,23 @@ namespace DotNETDevOps.FrontDoor.RouterFunction
         internal BaseRoute FindMatch(HttpContext arg)
         {
             BaseRoute found = null;
-            foreach (var route in routes)
+
+            if (routes.ContainsKey(arg.Request.Host.Host))
             {
-                if (!route.Hostnames.Contains(arg.Request.Host.Host,StringComparer.OrdinalIgnoreCase))
-                    continue;
 
-                if (route.IsMatch(arg.Request.Path))
-                {
-                    if(route.StopOnMatch)
-                        return route;
 
-                    found = route;
+                foreach (var route in routes[arg.Request.Host.Host])
+                { 
+                    if (route.IsMatch(arg.Request.Path))
+                    {
+                        if (route.StopOnMatch)
+                            return route;
+
+                        found = route;
+                    }
                 }
+
             }
-             
 
             return found;
         }
