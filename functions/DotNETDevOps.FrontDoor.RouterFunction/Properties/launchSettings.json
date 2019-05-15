@@ -1,6 +1,8 @@
 {
   "profiles": {
     "DotNETDevOps.FrontDoor.RouterFunction": {
+      "launchBrowser": true,
+      "launchUrl": "http://localhost:5862",
       "commandName": "Executable",
       "executablePath": "C:\\Users\\pksor\\AppData\\Local\\AzureFunctionsTools\\Releases\\2.22.0\\cli\\func.exe",
       "commandLineArgs": "host start --pause-on-error --port 5862",

@@ -1,0 +1,47 @@
+# ASP.NET Core
+# Build and test ASP.NET Core projects targeting .NET Core.
+# Add steps that run tests, create a NuGet package, deploy, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core
+
+name: '$(date:yyyyMMdd)$(rev:.rr)'
+trigger:
+  batch: true
+  branches:
+    include:
+    - master
+    - dev
+  paths:
+    include: apps/DotNETDevOps.FrontDoor.FrontApp/*
+
+pr:
+- master
+- dev
+- releases/*
+
+stages:
+- stage: BuildFrontend
+  dependsOn: []
+  jobs:
+  - job: Build
+    pool:
+      vmImage: 'windows-2019'
+
+    variables:
+      buildConfiguration: 'Release'
+
+    steps:
+    - task: Npm@1
+      displayName: 'npm install'
+      inputs:
+        workingDir: 'apps/DotNETDevOps.FrontDoor.FrontApp'
+        verbose: false
+
+    - task: Npm@1
+      displayName: 'npm custom'
+      inputs:
+        command: custom
+        workingDir: 'apps/DotNETDevOps.FrontDoor.FrontApp'
+        verbose: false
+        customCommand: 'run build'
+
+

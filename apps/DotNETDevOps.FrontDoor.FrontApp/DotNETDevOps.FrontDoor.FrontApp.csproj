@@ -1,0 +1,61 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
+    <AspNetCoreHostingModel>InProcess</AspNetCoreHostingModel>
+    <TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="src\components\Charts\BarChart.ts" />
+    <None Remove="src\components\Charts\config.ts" />
+    <None Remove="src\components\Charts\LineChart.ts" />
+    <None Remove="src\components\Charts\utils.ts" />
+    <None Remove="src\components\NotificationPlugin\index.ts" />
+    <None Remove="src\components\SidebarPlugin\index.ts" />
+    <None Remove="src\config.ts" />
+    <None Remove="src\i18n.ts" />
+    <None Remove="src\main.ts" />
+    <None Remove="src\plugins\blackDashboard.ts" />
+    <None Remove="src\plugins\globalComponents.ts" />
+    <None Remove="src\plugins\globalDirectives.ts" />
+    <None Remove="src\plugins\RTLPlugin.ts" />
+    <None Remove="src\registerServiceWorker.ts" />
+    <None Remove="src\router\index.ts" />
+    <None Remove="src\router\routes.ts" />
+    <None Remove="src\router\starterRouter.ts" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Microsoft.AspNetCore.Razor.Design" Version="2.2.0" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="2.2.3" />
+    <PackageReference Include="ProxyKit" Version="2.0.4" />
+    <PackageReference Include="System.Net.WebSockets.Client" Version="4.3.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\DotNETDevOps.FrontDoor.AspNetCore\DotNETDevOps.FrontDoor.AspNetCore.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <TypeScriptCompile Include="src\components\Charts\BarChart.ts" />
+    <TypeScriptCompile Include="src\components\Charts\config.ts" />
+    <TypeScriptCompile Include="src\components\Charts\LineChart.ts" />
+    <TypeScriptCompile Include="src\components\Charts\utils.ts" />
+    <TypeScriptCompile Include="src\components\NotificationPlugin\index.ts" />
+    <TypeScriptCompile Include="src\components\SidebarPlugin\index.ts" />
+    <TypeScriptCompile Include="src\config.ts" />
+    <TypeScriptCompile Include="src\i18n.ts" />
+    <TypeScriptCompile Include="src\main.ts" />
+    <TypeScriptCompile Include="src\plugins\blackDashboard.ts" />
+    <TypeScriptCompile Include="src\plugins\globalComponents.ts" />
+    <TypeScriptCompile Include="src\plugins\globalDirectives.ts" />
+    <TypeScriptCompile Include="src\plugins\RTLPlugin.ts" />
+    <TypeScriptCompile Include="src\registerServiceWorker.ts" />
+    <TypeScriptCompile Include="src\router\index.ts" />
+    <TypeScriptCompile Include="src\router\routes.ts" />
+    <TypeScriptCompile Include="src\router\starterRouter.ts" />
+  </ItemGroup>
+
+</Project>

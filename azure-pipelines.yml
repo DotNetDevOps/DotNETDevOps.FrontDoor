@@ -16,8 +16,11 @@ pr:
 - dev
 - releases/*
 
-stages:
+
+
+
 - stage: Build
+  dependsOn: []
   jobs:
   - job: Build
     pool:
@@ -55,7 +58,9 @@ stages:
       inputs:
         artifactName: 'drop'
         targetPath: '$(Build.ArtifactStagingDirectory)'
+
 - stage: Publish
+  condition: and(succeeded('Build'), eq(variables['Build.SourceBranch'], 'refs/heads/dev'))
   jobs:
   - deployment: DeployApiFunction
     pool:

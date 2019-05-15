@@ -2,6 +2,7 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp2.2</TargetFramework>
     <AzureFunctionsVersion>v2</AzureFunctionsVersion>
+    <UserSecretsId>dd8fdf9c-f706-45c9-9f4c-c0ad1ea90f13</UserSecretsId>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.App" />
@@ -10,6 +11,9 @@
     <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="1.0.28" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
     <PackageReference Include="ProxyKit" Version="2.0.4" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\DotNETDevOps.FrontDoor.AspNetCore\DotNETDevOps.FrontDoor.AspNetCore.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Content Update="host.json">

@@ -2,14 +2,17 @@
   "routes": [
     {
       "route": "= /",
-      "backend": "http://localhost:5861"
+      "hostnames": [ "localhost" ],
+      "backend": "http://localhost:8080"
     },
     {
       "route": "/",
-      "backend": "http://localhost:5861"
+      "hostnames": [ "localhost" ],
+      "backend": "http://localhost:8080"
     },
     {
       "route": "^~ /providers/DotNETDevOps.FrontDoor",
+      "hostnames": [ "localhost" ],
       "backend": "http://localhost:5860"
     }
   ]
