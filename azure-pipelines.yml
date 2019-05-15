@@ -10,7 +10,7 @@ trigger:
     include:
     - master
     - dev
-   paths:
+  paths:
     include:
     - functions/*
     - azure-pipelines.yml
