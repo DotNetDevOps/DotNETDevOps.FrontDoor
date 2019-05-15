@@ -11,7 +11,10 @@ trigger:
     - master
     - dev
   paths:
-    include: apps/DotNETDevOps.FrontDoor.FrontApp/*
+    include:
+    - apps/DotNETDevOps.FrontDoor.FrontApp/*
+    - frontdoor-front.yml
+
 
 pr:
 - master
