@@ -1,6 +1,6 @@
 {
-  "name": "vue-black-dashboard",
-  "short_name": "vue-black-dashboard",
+  "name": "DotNETDevOps Frontdoor",
+  "short_name": "frontdoor",
   "icons": [
     {
       "src": "./img/icons/android-chrome-192x192.png",

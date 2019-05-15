@@ -60,7 +60,9 @@ namespace DotNETDevOps.FrontDoor.RouterFunction
                         if (route.StopOnMatch)
                             return route;
 
-                        found = route;
+                        
+                            found = route;
+                       
                     }
                 }
 

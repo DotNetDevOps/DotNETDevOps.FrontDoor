@@ -25,7 +25,7 @@ namespace DotNETDevOps.FrontDoor.RouterFunction
                 Prefix = Route.TrimStart();
                
             }
-            RelativePrecedence = -Prefix.Length;
+            RelativePrecedence = Prefix.Length;
         }
 
         public override bool IsMatch(string url)
