@@ -27,7 +27,7 @@ stages:
   jobs:
   - job: Build
     pool:
-      vmImage: ubuntu-16.04
+      vmImage: 'windows-2019'
 
 
     variables:
@@ -42,24 +42,21 @@ stages:
         JsonFile: '$(srcPath)/package.json'
         JsonPathFilter: '$.name'
         VariableName: libName
+
     - task: JsonPathExtractToVariableTask@1
       displayName: 'Extracting $.version to libversion'
       inputs:
         JsonFile: '$(srcPath)/package.json' 
         JsonPathFilter: '$.version' 
         VariableName: libversion
+
     - task: SemVerUtilityTask@1
       displayName: 'Updating variable libversion'
       inputs:
         SemVer: '$(libversion)'
         StripPrereleases: true
         VariableName: libversion
-        FixHyphen: true
-
-
-
-
-
+        FixHyphen: true 
 
     - task: Npm@1
       displayName: 'npm install'
