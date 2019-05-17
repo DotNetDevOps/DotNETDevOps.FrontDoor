@@ -15,10 +15,32 @@
           "weigth": 1
         }
       ]
+    },
+    "serverless-identity": {
+      "servers": [
+        {
+          "host": "serverless-identity.azurewebsites.net",
+          "weigth": 1
+        }
+      ]
     }
 
   },
   "servers": [
+    {
+      "hostnames": [ "login.dotnetdevops.org" ],
+      "locations": [
+        {
+          "route": "/",
+          "proxy_pass": "https://serverless-identity/",
+          "features": {
+            "CopyXForwardedHeaders": true,
+            "AddXForwardedHeaders": true,
+            "ApplyCorrelationId": true
+          }
+        }
+      ]
+    },
     {
       "locations": [
         {
@@ -41,7 +63,7 @@
         },
         {
           "route": "= /frontdoor/",
-          "proxy_pass": "http://dotnetdevops-cdn/libs/frontdoor--front/1.0.0-ci-20190515.07/index.html",
+          "proxy_pass": "https://localhost:8080/index.html",
           "features": {
             "CopyXForwardedHeaders": true,
             "AddXForwardedHeaders": true,
@@ -50,7 +72,16 @@
         },
         {
           "route": "/frontdoor/",
-          "proxy_pass": "http://dotnetdevops-cdn/libs/frontdoor--front/1.0.0-ci-20190515.07/",
+          "proxy_pass": "https://localhost:8080/",
+          "features": {
+            "CopyXForwardedHeaders": true,
+            "AddXForwardedHeaders": true,
+            "ApplyCorrelationId": true
+          }
+        },
+        {
+          "route": "/sockjs-node/",
+          "proxy_pass": "https://localhost:8080/",
           "features": {
             "CopyXForwardedHeaders": true,
             "AddXForwardedHeaders": true,

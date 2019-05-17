@@ -15,10 +15,33 @@
           "weigth": 1
         }
       ]
+    },
+    "serverless-identity": {
+      "servers": [
+        {
+          "host": "serverless-identity.azurewebsites.net",
+          "weigth": 1
+        }
+      ]
     }
+
 
   },
   "servers": [
+    {
+      "hostnames": [ "login.dotnetdevops.org" ],
+      "locations": [
+        {
+          "route": "/",
+          "proxy_pass": "https://serverless-identity/",
+          "features": {
+            "CopyXForwardedHeaders": true,
+            "AddXForwardedHeaders": true,
+            "ApplyCorrelationId": true
+          }
+        }
+      ]
+    },
     {
       "locations": [
         {
