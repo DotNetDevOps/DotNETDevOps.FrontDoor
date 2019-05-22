@@ -80,7 +80,7 @@ namespace DotNETDevOps.FrontDoor.RouterApp
             
             if (upstreams.ContainsKey(url.Host))
             {
-                var upstream = expressionContext.Upstream ?? upstreams[url.Host].GetUpstreamHost();
+                var upstream = expressionContext?.Upstream ?? upstreams[url.Host].GetUpstreamHost();
 
                 proxyUrl = proxyUrl.Replace(url.Host, upstream.Host);
 
