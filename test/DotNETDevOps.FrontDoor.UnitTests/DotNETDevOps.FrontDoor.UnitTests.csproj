@@ -16,4 +16,8 @@
     </PackageReference>
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\DotNETDevOps.FrontDoor.AspNetCore\DotNETDevOps.FrontDoor.AspNetCore.csproj" />
+  </ItemGroup>
+
 </Project>
