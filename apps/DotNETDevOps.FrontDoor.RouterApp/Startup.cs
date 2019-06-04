@@ -4,93 +4,43 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json.Linq;
 using ProxyKit;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace DotNETDevOps.FrontDoor.RouterApp
 {
-    public static class CorrelationIdExtensions
-    {
-        public const string XCorrelationId = "X-Correlation-ID";
-
-        public static ForwardContext ApplyCorrelationId(this ForwardContext forwardContext)
-        {
-            if (!forwardContext.UpstreamRequest.Headers.Contains(XCorrelationId))
-            {
-                forwardContext.UpstreamRequest.Headers.Add(XCorrelationId, Guid.NewGuid().ToString());
-            }
-            return forwardContext;
-        }
-    }
-
-    public class RouteOptionsFactory 
-    {
-        private readonly ILogger<RouteOptionsFactory> logger;
-        private readonly IHostingEnvironment hostingEnvironment;
-
-        public RouteOptionsFactory(ILogger<RouteOptionsFactory> logger, IHostingEnvironment hostingEnvironment)
-        {
-            this.logger = logger;
-            this.hostingEnvironment = hostingEnvironment;
-        }
-
-         
-        public Dictionary<string, BaseRoute[]> GetRoutes()
-        {
-            var routes = JToken.Parse(File.ReadAllText(Path.Combine(this.hostingEnvironment.ContentRootPath, $"routes.{hostingEnvironment.EnvironmentName.ToLower()}.json".Replace(".production", ""))));
-
-
-
-           // var ex = new ExpressionParser(Options.Create(new ExpressionParserOptions { ThrowOnError = false, Document = routes }), logger, this);
-
-
-           // Recursive(ex, routes);
-
-            var routeConfiguration = routes.ToObject<RouteOptions>();
-
-
-            var locations = routeConfiguration.Servers.SelectMany(k => k.Locations).ToList();
-            foreach (var server in routeConfiguration.Servers)
-            {
-                foreach (var location in server.Locations)
-                {
-                    location.SetServer(routeConfiguration.Upstreams, server);
-                }
-            }
-
-           return new Dictionary<string, BaseRoute[]>(routeConfiguration.Servers
-                .SelectMany(k => k.Hostnames.Select(h => new { hostname = h, server = k }))
-                .ToLookup(k => k.hostname, v => v.server).ToDictionary(k => k.Key, v => v.SelectMany(k => k.Locations).OrderBy(k => k.Precedence).ThenBy(k => k.RelativePrecedence).ToArray()), StringComparer.OrdinalIgnoreCase);
-
-
-        }
-    }
 
     public class Startup
     {
         private readonly IHostingEnvironment hostingEnvironment;
+        private readonly IConfiguration configuration;
 
-        public Startup(IHostingEnvironment hostingEnvironment)
+        public Startup(IHostingEnvironment hostingEnvironment, IConfiguration configuration)
         {
             this.hostingEnvironment = hostingEnvironment;
+            this.configuration = configuration;
         }
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddProxy();
 
 
+            if (string.IsNullOrEmpty(configuration.GetValue<string>("RemoteConfiguration")))
+            {
+                services.AddSingleton<IRouteOptionsFactory,RemoteRouteOptionsFactory>();
+            }
+            else
+            {
+                services.AddSingleton<IRouteOptionsFactory,FileSystemRouteOptionsFactory>();
+            }
 
-            services.AddSingleton<RouteOptionsFactory>();
+          
             services.AddSingleton< RouteMatcher>();
 
             services.AddHttpClient("ArmClient", http =>

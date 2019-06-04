@@ -138,6 +138,7 @@ stages:
         versioningScheme: 'off'
 
 - stage: Publish
+  dependsOn: 'Build'
   condition: and(succeeded('Build'), eq(variables['Build.SourceBranch'], 'refs/heads/dev'))
   jobs:
   - deployment: DeployApiFunction

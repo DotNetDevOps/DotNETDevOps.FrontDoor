@@ -10,14 +10,14 @@ namespace DotNETDevOps.FrontDoor.RouterApp
 {
     public class RouteMatcher
     {
-        private readonly RouteOptionsFactory factory;
+        private readonly IRouteOptionsFactory factory;
 
         //private RouteOptions routeConfiguration;
         // private List<BaseRoute> routes = new List<BaseRoute>();
         //   private Dictionary<string, BaseRoute[]> routes;
 
 
-        public RouteMatcher(RouteOptionsFactory factory)
+        public RouteMatcher(IRouteOptionsFactory factory)
         {
             this.factory = factory;
 
