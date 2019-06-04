@@ -4,6 +4,7 @@ using Microsoft.Azure.WebJobs.Hosting;
 using System;
 using Microsoft.AspNetCore.Http;
 using ProxyKit;
+using System.Collections.Generic;
 
 namespace DotNETDevOps.FrontDoor.RouterFunction
 {
@@ -16,6 +17,9 @@ namespace DotNETDevOps.FrontDoor.RouterFunction
 
         [JsonProperty("proxy_pass")]
         public string ProxyPass { get; set; }
+
+        [JsonProperty("proxy_set_header")]
+        public Dictionary<string, string> ProxySetHeader { get; set; } = new Dictionary<string, string>();
        // public string[] Hostnames { get; set; } = new string[0];
 
         public abstract bool IsMatch(string url);
@@ -62,6 +66,11 @@ namespace DotNETDevOps.FrontDoor.RouterFunction
                     .CopyXForwardedHeaders()
                     .AddXForwardedHeaders()
                     .ApplyCorrelationId();
+
+            foreach(var h in ProxySetHeader)
+            {
+                forwarded.UpstreamRequest.Headers.Add(h.Key, h.Value);
+            }
 
             return forwarded;
         }
