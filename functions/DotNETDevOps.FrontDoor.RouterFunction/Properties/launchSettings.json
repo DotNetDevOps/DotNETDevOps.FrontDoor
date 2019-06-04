@@ -1,11 +1,19 @@
 {
   "profiles": {
     "DotNETDevOps.FrontDoor.RouterFunction": {
-      "commandName": "Executable",
-      "executablePath": "C:\\Users\\pksor\\AppData\\Local\\AzureFunctionsTools\\Releases\\2.22.0\\cli\\func.exe",
-      "commandLineArgs": "host start --pause-on-error --port 5862 --useHttps --cert C:/dev/localhost.pfx --password 123456",
+      "commandName": "Project",
+      "commandLineArgs": "host start --pause-on-error -port 12500 --useHttps --cert c:/dev/CN=dotnetdevops.eu.ngrok.io.pfx --password c:/dev/CN=dotnetdevops.eu.ngrok.io.pfx.key",
       "launchBrowser": true,
-      "launchUrl": "http://localhost:5862",
+      "launchUrl": "http://localhost:12500",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    },
+    "DotNETDevOps.FrontDoor.RouterFunctionHttp": {
+      "commandName": "Project",
+      "commandLineArgs": "host start --pause-on-error -port 12501",
+      "launchBrowser": true,
+      "launchUrl": "https://localhost:12501",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }

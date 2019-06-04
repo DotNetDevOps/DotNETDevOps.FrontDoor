@@ -1,18 +1,16 @@
-﻿using DotNETDevOps.Extensions.AzureFunctions;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Azure.WebJobs.Hosting;
-using ProxyKit;
-using System;
+﻿using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace DotNETDevOps.FrontDoor.RouterFunction
+namespace DotNETDevOps.FrontDoor.RouterApp
 {
-   
+
     public class UpstreamHostServer
     {
         public string Host { get; set; }
         public uint Weight { get; set; } = 1;
+
+        public JObject Extensions { get; set; }
     }
     public class Upstream
     {
@@ -23,11 +21,11 @@ namespace DotNETDevOps.FrontDoor.RouterFunction
            // RoundRobin = new Lazy<RoundRobin>(() => new RoundRobin(Servers.Select(s => new UpstreamHost(s.Host, s.Weight)).ToArray()));
         }
 
-        internal string GetUpstreamHost()
+        internal UpstreamHostServer GetUpstreamHost()
         {
             var server = Servers.First();
 
-            return server.Host;
+            return server;
            
         }
     }

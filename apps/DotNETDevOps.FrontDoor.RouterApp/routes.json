@@ -1,0 +1,147 @@
+{
+  "upstreams": {
+    "dotnetdevops-cdn": {
+      "servers": [
+        {
+          "host": "dotnetdevops.blob.core.windows.net",
+          "weigth": 1
+        }
+      ]
+    },
+    "dotnetdevops-www": {
+      "servers": [
+        {
+          "host": "dotnetdevops-www.azurewebsites.net",
+          "weigth": 1
+        }
+      ]
+    },
+    "serverless-identity": {
+      "servers": [
+        {
+          "host": "serverless-identity.azurewebsites.net",
+          "weigth": 1
+        }
+      ]
+    },
+    "frontdoor-api": {
+      "servers": [
+        {
+          "host": "frontdoor-api.azurewebsites.net",
+          "weigth": 1
+        }
+      ]
+    },
+    "letsencrypt-provider": {
+      "servers": [
+        {
+          "host": "dotnetdevops-letsencrypt-dev-ci.azurewebsites.net",
+          "weight": 1,
+          "extensions": {
+            "azure": {
+              "functions": {
+                "authentication": {
+                  "subscriptionId": "0fd7128b-5305-49da-a400-b7a37feb271c",
+                  "resourceGroupName": "dotnetdevops",
+                  "name": "dotnetdevops-letsencrypt",
+                  "slot": "dev-ci"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+
+  },
+  "servers": [
+    {
+      "locations": [
+        {
+          "route": "/.well-known/acme-challenge/",
+          "proxy_pass": "https://letsencrypt-provider/.well-known/acme-challenge/"
+        }
+      ],
+      "hostnames": [ "*" ]
+    },
+    {
+      "hostnames": [ "login.dotnetdevops.org" ],
+      "locations": [
+        {
+          "route": "/",
+          "proxy_pass": "https://serverless-identity/",
+          "features": {
+            "CopyXForwardedHeaders": true,
+            "AddXForwardedHeaders": true,
+            "ApplyCorrelationId": true
+          }
+        }
+      ]
+    },
+    {
+      "hostnames": [ "management.dotnetdevops.org" ],
+      "locations": [
+        {
+          "route": "~* ^/providers/(DotNETDevOps.FrontDoor)",
+          "proxy_pass": "http://frontdoor-api/",
+          "features": {
+            "CopyXForwardedHeaders": true,
+            "AddXForwardedHeaders": true,
+            "ApplyCorrelationId": true
+          }
+        },
+        {
+          "route": "~* ^/providers/(DotNETDevOps.LetsEncrypt)",
+          "proxy_pass": "http://letsencrypt-provider/",
+          "features": {
+            "CopyXForwardedHeaders": true,
+            "AddXForwardedHeaders": true,
+            "ApplyCorrelationId": true
+          }
+        }
+      ]
+    },
+    {
+      "hostnames": [ "dotnetdevops.org", "www.dotnetdevops.org" ],
+      "locations": [
+        {
+          "route": "= /",
+          "proxy_pass": "http://dotnetdevops-www/",
+          "features": {
+            "CopyXForwardedHeaders": true,
+            "AddXForwardedHeaders": true,
+            "ApplyCorrelationId": true
+          }
+        },
+        {
+          "route": "/",
+          "proxy_pass": "http://dotnetdevops-www/",
+          "features": {
+            "CopyXForwardedHeaders": true,
+            "AddXForwardedHeaders": true,
+            "ApplyCorrelationId": true
+          }
+        },
+        {
+          "route": "= /frontdoor/",
+          "proxy_pass": "[concat(blobFindVersion('http://dotnetdevops-cdn/libs/','frontdoor--front'),'index.html')]",
+          "features": {
+            "CopyXForwardedHeaders": true,
+            "AddXForwardedHeaders": true,
+            "ApplyCorrelationId": true
+          }
+        },
+        {
+          "route": "/frontdoor/",
+          "proxy_pass": "[blobFindVersion('http://dotnetdevops-cdn/libs/','frontdoor--front')]",
+          "features": {
+            "CopyXForwardedHeaders": true,
+            "AddXForwardedHeaders": true,
+            "ApplyCorrelationId": true
+          }
+        }
+      ]
+    }
+  ]
+
+}

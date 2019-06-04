@@ -1,12 +1,14 @@
-﻿using Microsoft.AspNetCore;
-using Microsoft.AspNetCore.Hosting;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
-namespace DotNETDevOps.FrontDoor.RouterFunction
+namespace DotNETDevOps.FrontDoor.RouterApp
 {
     public class Program
     {
@@ -18,6 +20,5 @@ namespace DotNETDevOps.FrontDoor.RouterFunction
         public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
                 .UseStartup<Startup>();
-
     }
 }

@@ -1,5 +1,5 @@
 using DotNETDevOps.Extensions.AzureFunctions;
-using DotNETDevOps.FrontDoor.FrontFunction;
+using DotNETDevOps.FrontDoor.ApiFunction;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -14,8 +14,9 @@ using System.Threading.Tasks;
 
 [assembly: WebJobsStartup(typeof(AspNetCoreWebHostStartUp<WebBuilder, Startup>))]
 
-namespace DotNETDevOps.FrontDoor.FrontFunction
+namespace DotNETDevOps.FrontDoor.ApiFunction
 {
+
     public class WebBuilder : IWebHostBuilderExtension<Startup>
     {
         private readonly IHostingEnvironment environment;

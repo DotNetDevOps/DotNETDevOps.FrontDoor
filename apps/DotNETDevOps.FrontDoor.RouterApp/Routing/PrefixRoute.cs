@@ -1,10 +1,8 @@
-﻿using System;
-using DotNETDevOps.Extensions.AzureFunctions;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Azure.WebJobs.Hosting;
+﻿using Microsoft.AspNetCore.Http;
+using System;
 
 
-namespace DotNETDevOps.FrontDoor.RouterFunction
+namespace DotNETDevOps.FrontDoor.RouterApp
 {
     public class PrefixRoute : BaseRoute
     {

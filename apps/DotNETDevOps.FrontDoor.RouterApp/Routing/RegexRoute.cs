@@ -1,10 +1,9 @@
-﻿using DotNETDevOps.Extensions.AzureFunctions;
-using Microsoft.Azure.WebJobs.Hosting;
+﻿
 using System.Text.RegularExpressions;
 
 
 
-namespace DotNETDevOps.FrontDoor.RouterFunction
+namespace DotNETDevOps.FrontDoor.RouterApp
 {
     public class RegexRoute : BaseRoute
     {

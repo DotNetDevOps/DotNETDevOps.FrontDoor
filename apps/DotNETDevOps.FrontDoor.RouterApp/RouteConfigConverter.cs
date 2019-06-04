@@ -1,12 +1,10 @@
-﻿using System;
-using Newtonsoft.Json;
-using DotNETDevOps.Extensions.AzureFunctions;
-using Microsoft.Azure.WebJobs.Hosting;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System;
 
 
 
-namespace DotNETDevOps.FrontDoor.RouterFunction
+namespace DotNETDevOps.FrontDoor.RouterApp
 {
     public class RouteConfigConverter : JsonConverter
     {
