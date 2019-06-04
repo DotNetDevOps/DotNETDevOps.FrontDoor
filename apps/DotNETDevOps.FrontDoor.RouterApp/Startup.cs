@@ -31,7 +31,7 @@ namespace DotNETDevOps.FrontDoor.RouterApp
             services.AddProxy();
 
 
-            if (string.IsNullOrEmpty(configuration.GetValue<string>("RemoteConfiguration")))
+            if (!string.IsNullOrEmpty(configuration.GetValue<string>("RemoteConfiguration")))
             {
                 services.AddSingleton<IRouteOptionsFactory,RemoteRouteOptionsFactory>();
             }
