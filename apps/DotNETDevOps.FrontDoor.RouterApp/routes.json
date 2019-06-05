@@ -106,7 +106,7 @@
       "locations": [
         {
           "route": "= /",
-          "proxy_pass": "http://dotnetdevops-www/",
+          "proxy_pass": "[concat(blobFindVersion('http://dotnetdevops-cdn/libs/','dotnetdevops-front'),'index.html')]",
           "features": {
             "CopyXForwardedHeaders": true,
             "AddXForwardedHeaders": true,
@@ -115,7 +115,7 @@
         },
         {
           "route": "/",
-          "proxy_pass": "http://dotnetdevops-www/",
+          "proxy_pass": "[blobFindVersion('http://dotnetdevops-cdn/libs/','dotnetdevops-front')]",
           "features": {
             "CopyXForwardedHeaders": true,
             "AddXForwardedHeaders": true,
