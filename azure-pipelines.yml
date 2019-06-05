@@ -13,6 +13,7 @@ trigger:
   paths:
     include:
     - functions/*
+    - apps/DotNETDevOps.FrontDoor.RouterApp/*
     - azure-pipelines.yml
 
 pr:
