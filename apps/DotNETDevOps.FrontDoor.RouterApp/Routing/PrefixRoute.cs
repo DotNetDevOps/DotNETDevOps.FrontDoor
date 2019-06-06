@@ -37,6 +37,8 @@ namespace DotNETDevOps.FrontDoor.RouterApp
             {
                 context.Request.Path = rest;
             }
+
+            base.RewriteUrl(context);
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using DotNETDevOps.FrontDoor.RouterApp.Azure.Blob;
 using DotNETDevOps.JsonFunctions;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.Azure.Services.AppAuthentication;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,6 +15,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace DotNETDevOps.FrontDoor.RouterApp
@@ -38,6 +40,9 @@ namespace DotNETDevOps.FrontDoor.RouterApp
 
         [JsonProperty("proxy_set_header")]
         public Dictionary<string, string> ProxySetHeader { get; set; } = new Dictionary<string, string>();
+
+        [JsonProperty("rewrite")]
+        public string Rewrite { get; set; }
 
         // public string[] Hostnames { get; set; } = new string[0];
 
@@ -65,7 +70,30 @@ namespace DotNETDevOps.FrontDoor.RouterApp
         }
         public virtual void RewriteUrl(HttpContext context)
         {
+            if (!string.IsNullOrEmpty(Rewrite))
+            {
+                var url = context.Request.GetDisplayUrl();
 
+                if (Regex.IsMatch(url, Rewrite.Split(' ').First()))
+                {
+                    var newUrl= Regex.Replace(url, Rewrite.Split(' ').First(), Rewrite.Split(' ').Last().Replace("$request_uri", url));
+                    if (newUrl.StartsWith("/"))
+                    {
+                        context.Request.Path = newUrl;
+                    }
+                    else
+                    {
+                        var newUri = new Uri(newUrl);
+
+                        context.Request.Scheme = newUri.Scheme;
+                        context.Request.Host = new HostString(newUri.Host);
+                        context.Request.Path = newUri.AbsolutePath;
+                        context.Request.QueryString = new QueryString(newUri.Query);
+                    }
+
+
+                }
+            }
         }
         public async Task<ForwardContext> ForwardAsync(HttpContext context)
         {

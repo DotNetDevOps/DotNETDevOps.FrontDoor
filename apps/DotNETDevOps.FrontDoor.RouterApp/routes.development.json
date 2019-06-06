@@ -55,12 +55,31 @@
   },
   "servers": [
     {
-      "hostnames": [ "dotnetdevops.eu.ngrok.io" ],
+      "hostnames": [ "dotnetdevops.eu.ngrok.io" , "localhost"],
       "locations": [
         {
-          "route": "/",
-          "proxy_pass": "https://localhost:8080/"
+          "route": "= /",
+          "rewrite": "^.*$ /index.html",
+          "proxy_pass": "[blobFindVersion('http://dotnetdevops-cdn/libs/','dotnetdevops-front')]",
+          "features": {
+            "CopyXForwardedHeaders": true,
+            "AddXForwardedHeaders": true,
+            "ApplyCorrelationId": true
+          }
         },
+        {
+          "route": "/",
+          "proxy_pass": "[blobFindVersion('http://dotnetdevops-cdn/libs/','dotnetdevops-front')]",
+          "features": {
+            "CopyXForwardedHeaders": true,
+            "AddXForwardedHeaders": true,
+            "ApplyCorrelationId": true
+          }
+        },
+        //{
+        //  "route": "/",
+        //  "proxy_pass": "https://localhost:8080/"
+        //},
         {
           "route": "/.well-known/acme-challenge/",
           "proxy_pass": "https://letsencrypt-provider/.well-known/acme-challenge/"

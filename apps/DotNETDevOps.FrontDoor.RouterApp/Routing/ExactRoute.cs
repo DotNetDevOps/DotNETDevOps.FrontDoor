@@ -40,6 +40,8 @@ namespace DotNETDevOps.FrontDoor.RouterApp
                     }
                 }
             }
+
+            base.RewriteUrl(context);
         }
     }
 }
