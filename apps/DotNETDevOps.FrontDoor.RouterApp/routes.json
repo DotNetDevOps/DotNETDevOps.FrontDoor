@@ -98,6 +98,15 @@
             "AddXForwardedHeaders": true,
             "ApplyCorrelationId": true
           }
+        },
+        {
+          "route": "~* ^/providers/(DotNETDevOps.AzureTemplates)",
+          "proxy_pass": "https://dotnetdevops-www/",
+          "features": {
+            "CopyXForwardedHeaders": true,
+            "AddXForwardedHeaders": true,
+            "ApplyCorrelationId": true
+          }
         }
       ]
     },
