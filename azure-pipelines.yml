@@ -104,7 +104,7 @@ stages:
         Destination: 'AzureBlob'
         storage: 'dotnetdevops'
         ContainerName: 'functions'
-        BlobPrefix: 'DotNETDevOps.FrontDoor.ApiFunction/$(version)-$(Build.BuildNumber)/'
+        BlobPrefix: 'DotNETDevOps.FrontDoor.ApiFunction/$(version)-ci-$(Build.BuildNumber)/'
 
     - task: AzureFileCopy@3
       inputs:
@@ -113,7 +113,7 @@ stages:
         Destination: 'AzureBlob'
         storage: 'dotnetdevops'
         ContainerName: 'functions'
-        BlobPrefix: 'DotNETDevOps.FrontDoor.FrontFunction/$(version)-$(Build.BuildNumber)/'
+        BlobPrefix: 'DotNETDevOps.FrontDoor.FrontFunction/$(version)-ci-$(Build.BuildNumber)/'
 
     - task: AzureFileCopy@3
       inputs:
@@ -122,7 +122,7 @@ stages:
         Destination: 'AzureBlob'
         storage: 'dotnetdevops'
         ContainerName: 'functions'
-        BlobPrefix: 'DotNETDevOps.FrontDoor.RouterFunction/$(version)-$(Build.BuildNumber)/'
+        BlobPrefix: 'DotNETDevOps.FrontDoor.RouterFunction/$(version)-ci-$(Build.BuildNumber)/'
 
 
 - stage: 'CIPublishLibs'
