@@ -20,14 +20,16 @@ namespace DotNETDevOps.FrontDoor.RouterFunction
     public class WebBuilder : IWebHostBuilderExtension<Startup>
     {
         private readonly IHostingEnvironment environment;
+        private readonly IConfiguration configuration;
 
-        public WebBuilder(IHostingEnvironment environment)
+        public WebBuilder(IHostingEnvironment environment,IConfiguration configuration)
         {
             this.environment = environment;
+            this.configuration = configuration;
         }
         public void ConfigureAppConfiguration(WebHostBuilderContext context, IConfigurationBuilder builder)
         {
-
+        //    builder.AddConfiguration(configuration);
         }
         private void Logging(ILoggingBuilder b)
         {
