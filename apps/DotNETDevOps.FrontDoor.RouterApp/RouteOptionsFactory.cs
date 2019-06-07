@@ -87,6 +87,8 @@ namespace DotNETDevOps.FrontDoor.RouterApp
 
         public override Dictionary<string, BaseRoute[]> GetRoutes()
         {
+            Task.Run(() => etag.Value());
+
             return base.GetRoutes();
         }
     }

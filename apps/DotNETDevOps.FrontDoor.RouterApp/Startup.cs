@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
 using ProxyKit;
 using System;
 using System.Diagnostics;
@@ -57,6 +58,7 @@ namespace DotNETDevOps.FrontDoor.RouterApp
 
             app.UseWebSockets();
 
+         
 
             //Use the configuration router          
 
@@ -64,6 +66,9 @@ namespace DotNETDevOps.FrontDoor.RouterApp
                     MatchRoutes,
                     ProxyRoute);
 
+            app.Map("/.well-known/config.json", b => b.Run(async (r) => {
+                await r.Response.WriteAsync(JsonConvert.SerializeObject(r.RequestServices.GetRequiredService<IRouteOptionsFactory>().GetRoutes()));
+            }));
 
             //Route everything else to frontdoor frontend
 
