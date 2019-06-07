@@ -35,10 +35,11 @@ namespace DotNETDevOps.FrontDoor.RouterApp
 
             return route;
         }
+        public override bool CanWrite => false;
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-           
+            throw new NotImplementedException();
         }
     }
 }
