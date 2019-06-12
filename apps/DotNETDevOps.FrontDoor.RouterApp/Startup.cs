@@ -58,7 +58,10 @@ namespace DotNETDevOps.FrontDoor.RouterApp
 
             app.UseWebSockets();
 
-         
+
+            app.Map("/.well-known/config.json", b => b.Run(async (r) => {
+                await r.Response.WriteAsync(JsonConvert.SerializeObject(r.RequestServices.GetRequiredService<IRouteOptionsFactory>().GetRoutes()));
+            }));
 
             //Use the configuration router          
 
@@ -66,9 +69,7 @@ namespace DotNETDevOps.FrontDoor.RouterApp
                     MatchRoutes,
                     ProxyRoute);
 
-            app.Map("/.well-known/config.json", b => b.Run(async (r) => {
-                await r.Response.WriteAsync(JsonConvert.SerializeObject(r.RequestServices.GetRequiredService<IRouteOptionsFactory>().GetRoutes()));
-            }));
+
 
             //Route everything else to frontdoor frontend
 
