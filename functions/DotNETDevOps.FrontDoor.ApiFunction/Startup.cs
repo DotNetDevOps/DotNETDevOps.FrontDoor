@@ -1,5 +1,6 @@
 ﻿using DotNETDevOps.FrontDoor.AspNetCore;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -30,12 +31,23 @@ namespace DotNETDevOps.FrontDoor.ApiFunction
 
 
             services.WithXForwardedHeaders();
+            services.AddHealthChecks();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
-           
+
+            app.UseHealthChecks("/.well-known/ready", new HealthCheckOptions()
+            {
+                Predicate = (check) => check.Tags.Contains("ready"),
+            });
+
+            app.UseHealthChecks("/.well-known/live", new HealthCheckOptions
+            {
+                Predicate = (_) => false
+            });
+
 
             if (!env.IsProduction())
             {

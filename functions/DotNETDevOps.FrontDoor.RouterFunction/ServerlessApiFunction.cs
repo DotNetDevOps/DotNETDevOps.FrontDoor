@@ -17,6 +17,7 @@ using System.Threading.Tasks;
 
 namespace DotNETDevOps.FrontDoor.RouterFunction
 {
+  
     public class WebBuilder : IWebHostBuilderExtension<Startup>
     {
         private readonly IHostingEnvironment environment;
@@ -68,6 +69,8 @@ namespace DotNETDevOps.FrontDoor.RouterFunction
 
             return aspNetCoreRunner.RunAsync(executionContext);
         }
+
+
     }
 
 }

@@ -21,7 +21,7 @@ namespace DotNETDevOps.FrontDoor.ApiFunction.Endpoints
 
         [HttpGet("backends")]
         public async Task<IActionResult> ListBackendAsync(
-            [FromServices] IDurableOrchestrationClient durableOrchestrationClient)
+          [FromServices] IDurableOrchestrationClient durableOrchestrationClient)
         { 
             return new OkResult();
         }

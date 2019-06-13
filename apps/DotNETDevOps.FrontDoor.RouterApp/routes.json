@@ -59,7 +59,11 @@
       "locations": [
         {
           "route": "/.well-known/acme-challenge/",
-          "proxy_pass": "https://letsencrypt-provider/.well-known/acme-challenge/"
+          "proxy_pass": "https://letsencrypt-provider/.well-known/acme-challenge/",
+          "health_check": {
+            "uri": "/",
+            "interval": 60
+          }
         }
       ],
       "hostnames": [ "*" ]
@@ -70,6 +74,13 @@
         {
           "route": "/",
           "proxy_pass": "https://serverless-identity/",
+          "health_check": {
+            "uri": "/",
+            "interval": 10,
+            "fails": 3,
+            "passes": 2,
+            "port": "80"
+          },
           "features": {
             "CopyXForwardedHeaders": true,
             "AddXForwardedHeaders": true,
@@ -84,6 +95,10 @@
         {
           "route": "~* ^/providers/(DotNETDevOps.FrontDoor)",
           "proxy_pass": "http://frontdoor-api/",
+          "health_check": {
+            "uri": "/.well-known/live",
+            "interval": 60
+          },
           "features": {
             "CopyXForwardedHeaders": true,
             "AddXForwardedHeaders": true,
@@ -93,6 +108,10 @@
         {
           "route": "~* ^/providers/(DotNETDevOps.LetsEncrypt)",
           "proxy_pass": "http://letsencrypt-provider/",
+          "health_check": {
+            "uri": "/",
+            "interval": 60
+          },
           "features": {
             "CopyXForwardedHeaders": true,
             "AddXForwardedHeaders": true,
@@ -102,6 +121,10 @@
         {
           "route": "~* ^/providers/(DotNETDevOps.AzureTemplates)",
           "proxy_pass": "https://dotnetdevops-www/",
+          "health_check": {
+            "uri": "/",
+            "interval": 60
+          },
           "features": {
             "CopyXForwardedHeaders": true,
             "AddXForwardedHeaders": true,

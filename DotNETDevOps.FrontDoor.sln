@@ -29,7 +29,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "apps", "apps", "{B42A99B8-D
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotNETDevOps.FrontDoor.UnitTests", "test\DotNETDevOps.FrontDoor.UnitTests\DotNETDevOps.FrontDoor.UnitTests.csproj", "{C3258E80-30CD-4704-91E7-EB31247639BB}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotNETDevOps.FrontDoor.RouterApp", "..\DotNETDevOps.FrontDoor/apps\DotNETDevOps.FrontDoor.RouterApp\DotNETDevOps.FrontDoor.RouterApp.csproj", "{655CD040-2EB5-47BC-9A8B-52437E511275}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotNETDevOps.FrontDoor.RouterApp", "apps\DotNETDevOps.FrontDoor.RouterApp\DotNETDevOps.FrontDoor.RouterApp.csproj", "{655CD040-2EB5-47BC-9A8B-52437E511275}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -28,6 +28,57 @@ namespace DotNETDevOps.FrontDoor.RouterApp
 
         public UpstreamHostServer Upstream { get; set; }
     }
+    public class HealthCheck
+    {
+        public int? Interval { get; set; }
+        public int? Delay { get; set; }
+        public PathString Path { get; set; } = "/";
+
+        private HeathCheckItem _heathCheckItem;
+
+        public HeathCheckItem GetHeathCheckItem(BaseRoute location)
+        {
+            if (_heathCheckItem != null)
+            {
+                return _heathCheckItem;
+            }
+
+            ExpressionContext expressionContext = null;
+
+            var proxyUrl = location.ProxyPass;
+            //if (proxyUrl.StartsWith("["))
+            //{
+            //    var ex = new ExpressionParser<ExpressionContext>(Options.Create(new ExpressionParserOptions<ExpressionContext>
+            //    {
+            //        ThrowOnError = false,
+            //        Document = expressionContext = new ExpressionContext { BaseRoute = this, HttpContext = context, Upstreams = this.upstreams }
+            //    }), context.RequestServices.GetService<ILogger<ExpressionParser<ExpressionContext>>>(), this);
+
+            //    proxyUrl = (await ex.EvaluateAsync(proxyUrl)).ToString();
+            //}
+
+            var url = new Uri(proxyUrl);
+          
+
+            if (location.Upstreams.ContainsKey(url.Host))
+            {
+                var upstream = expressionContext?.Upstream ?? location.Upstreams[url.Host].GetUpstreamHost();
+
+                proxyUrl = proxyUrl.Replace(url.Host, upstream.Host);
+
+            }
+
+            return _heathCheckItem = new HeathCheckItem
+                {
+                    Interval = Interval ?? 5,
+                    NextRun = DateTimeOffset.UtcNow + TimeSpan.FromSeconds(Delay ?? 0),
+                    Url = new Uri(proxyUrl).GetLeftPart(UriPartial.Authority) + Path
+            };
+
+            
+
+        }
+    }
     [JsonConverter(typeof(RouteConfigConverter))]
     public abstract class BaseRoute : IExpressionFunctionFactory<ExpressionContext>
     {
@@ -44,6 +95,9 @@ namespace DotNETDevOps.FrontDoor.RouterApp
         [JsonProperty("rewrite")]
         public string Rewrite { get; set; }
 
+        [JsonProperty("health_check")]
+        public HealthCheck HealthCheck { get; set; }
+
         // public string[] Hostnames { get; set; } = new string[0];
 
         public abstract bool IsMatch(string url);
@@ -53,7 +107,9 @@ namespace DotNETDevOps.FrontDoor.RouterApp
         public abstract void Initialize();
 
         private Server server;
-        private Dictionary<string, Upstream> upstreams;
+       
+        public Dictionary<string, Upstream> Upstreams { get; private set; }
+
         internal void SetServer(System.Collections.Generic.Dictionary<string, Upstream> upstreams, Server server)
         {
             if (upstreams == null)
@@ -66,7 +122,7 @@ namespace DotNETDevOps.FrontDoor.RouterApp
                 throw new ArgumentNullException(nameof(server));
             }
             this.server = server;
-            this.upstreams = upstreams;
+            this.Upstreams = upstreams;
         }
         public virtual void RewriteUrl(HttpContext context)
         {
@@ -103,16 +159,16 @@ namespace DotNETDevOps.FrontDoor.RouterApp
             if (proxyUrl.StartsWith("["))
             {
                 var ex = new ExpressionParser<ExpressionContext>(Options.Create(new ExpressionParserOptions<ExpressionContext> {
-                    ThrowOnError = false, Document = expressionContext= new ExpressionContext { BaseRoute = this, HttpContext = context, Upstreams=this.upstreams  } }), context.RequestServices.GetService<ILogger< ExpressionParser<ExpressionContext>>>(), this);
+                    ThrowOnError = false, Document = expressionContext= new ExpressionContext { BaseRoute = this, HttpContext = context, Upstreams=this.Upstreams  } }), context.RequestServices.GetService<ILogger< ExpressionParser<ExpressionContext>>>(), this);
 
                 proxyUrl = (await ex.EvaluateAsync(proxyUrl)).ToString();
             }
 
             var url = new Uri(proxyUrl);
             
-            if (upstreams.ContainsKey(url.Host))
+            if (Upstreams.ContainsKey(url.Host))
             {
-                var upstream = expressionContext?.Upstream ?? upstreams[url.Host].GetUpstreamHost();
+                var upstream = expressionContext?.Upstream ?? Upstreams[url.Host].GetUpstreamHost();
 
                 proxyUrl = proxyUrl.Replace(url.Host, upstream.Host);
 
@@ -134,9 +190,9 @@ namespace DotNETDevOps.FrontDoor.RouterApp
             }
 
 
-            if (upstreams.ContainsKey(url.Host))
+            if (Upstreams.ContainsKey(url.Host))
             {
-                var upstream = upstreams[url.Host].GetUpstreamHost(); 
+                var upstream = Upstreams[url.Host].GetUpstreamHost(); 
                 var azurefunction = upstream?.Extensions?.SelectToken("$.azure.functions.authentication");
                 if (azurefunction != null)
                 {

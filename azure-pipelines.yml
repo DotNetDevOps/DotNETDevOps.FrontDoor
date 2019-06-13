@@ -87,16 +87,26 @@ stages:
       vmImage: 'windows-2019'
 
     steps:
-    - task: VersionReaderTask@1
-      inputs:
-        searchPattern: 'functions/**/*.csproj'
-        buildPrefix: '-'
     - task: DownloadPipelineArtifact@1
       inputs:
         buildType: 'current'
         artifactName: 'drop'
         targetPath: '$(System.ArtifactsDirectory)'
-    
+    - task: VersionReaderTask@1
+      inputs:
+        searchPattern: 'functions/DotNETDevOps.FrontDoor.RouterFunction/*.csproj'
+    - task: AzureFileCopy@3
+      inputs:
+        SourcePath: '$(Build.ArtifactStagingDirectory)/DotNETDevOps.FrontDoor.RouterFunction.zip'
+        azureSubscription: 'Microsoft Partner Network(0fd7128b-5305-49da-a400-b7a37feb271c)'
+        Destination: 'AzureBlob'
+        storage: 'dotnetdevops'
+        ContainerName: 'functions'
+        BlobPrefix: 'DotNETDevOps.FrontDoor.RouterFunction/$(version)-ci-$(Build.BuildNumber)/'
+   
+    - task: VersionReaderTask@1
+      inputs:
+        searchPattern: 'functions/DotNETDevOps.FrontDoor.ApiFunction/*.csproj'
     - task: AzureFileCopy@3
       inputs:
         SourcePath: '$(Build.ArtifactStagingDirectory)/DotNETDevOps.FrontDoor.ApiFunction.zip'
@@ -106,6 +116,9 @@ stages:
         ContainerName: 'functions'
         BlobPrefix: 'DotNETDevOps.FrontDoor.ApiFunction/$(version)-ci-$(Build.BuildNumber)/'
 
+    - task: VersionReaderTask@1
+      inputs:
+        searchPattern: 'functions/DotNETDevOps.FrontDoor.FrontFunction/*.csproj'
     - task: AzureFileCopy@3
       inputs:
         SourcePath: '$(Build.ArtifactStagingDirectory)/DotNETDevOps.FrontDoor.FrontFunction.zip'
@@ -115,14 +128,7 @@ stages:
         ContainerName: 'functions'
         BlobPrefix: 'DotNETDevOps.FrontDoor.FrontFunction/$(version)-ci-$(Build.BuildNumber)/'
 
-    - task: AzureFileCopy@3
-      inputs:
-        SourcePath: '$(Build.ArtifactStagingDirectory)/DotNETDevOps.FrontDoor.RouterFunction.zip'
-        azureSubscription: 'Microsoft Partner Network(0fd7128b-5305-49da-a400-b7a37feb271c)'
-        Destination: 'AzureBlob'
-        storage: 'dotnetdevops'
-        ContainerName: 'functions'
-        BlobPrefix: 'DotNETDevOps.FrontDoor.RouterFunction/$(version)-ci-$(Build.BuildNumber)/'
+
 
 
 - stage: 'CIPublishLibs'
