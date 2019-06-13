@@ -214,6 +214,7 @@ stages:
                 package: '$(Pipeline.Workspace)/**/DotNETDevOps.FrontDoor.ApiFunction.zip'
                 enableCustomDeployment: true
                 DeploymentType: 'runFromZip'
+                appSettings: '-DurableTaskHubName FrontDoorApiHub'
   - deployment: DeployFrontFunction
     pool:
       vmImage: 'windows-2019'
