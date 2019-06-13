@@ -63,7 +63,7 @@
           "route": "/.well-known/acme-challenge/",
           "proxy_pass": "https://letsencrypt-provider/.well-known/acme-challenge/",
           "health_check": {
-            "uri": "/",
+            "path": "/",
             "interval": 60
           }
         }
@@ -77,7 +77,7 @@
           "route": "/",
           "proxy_pass": "https://serverless-identity/",
           "health_check": {
-            "uri": "/.well-known/live",
+            "path": "/.well-known/live",
             "interval": 60
           },
           "features": {
@@ -95,7 +95,7 @@
           "route": "~* ^/providers/(DotNETDevOps.FrontDoor)",
           "proxy_pass": "http://frontdoor-api/",
           "health_check": {
-            "uri": "/.well-known/live",
+            "path": "/.well-known/live",
             "interval": 60
           },
           "features": {
@@ -108,7 +108,7 @@
           "route": "~* ^/providers/(DotNETDevOps.LetsEncrypt)",
           "proxy_pass": "http://letsencrypt-provider/",
           "health_check": {
-            "uri": "/",
+            "path": "/",
             "interval": 60
           },
           "features": {
@@ -121,7 +121,7 @@
           "route": "~* ^/providers/(DotNETDevOps.AzureTemplates)",
           "proxy_pass": "https://dotnetdevops-www/",
           "health_check": {
-            "uri": "/.well-known/live",
+            "path": "/.well-known/live",
             "interval": 60
           },
           "features": {
