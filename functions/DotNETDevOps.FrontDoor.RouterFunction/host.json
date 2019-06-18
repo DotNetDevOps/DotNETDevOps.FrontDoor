@@ -4,5 +4,14 @@
     "http": {
       "routePrefix": ""
     }
+  },
+  "logging": {
+    "fileLoggingMode": "always",
+    "logLevel": {
+      "default": "Warning",
+      "Host.Result": "Error",
+      "Function": "Warning",
+      "Host.Aggreator": "Information"
+    }
   }
 }
