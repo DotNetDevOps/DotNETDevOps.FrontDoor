@@ -17,9 +17,15 @@ trigger:
     - azure-pipelines.yml
 
 pr:
-- master
-- dev
-- releases/*
+  branches:
+    include:
+    - master
+    - dev
+  paths:
+    include:
+    - functions/*
+    - apps/DotNETDevOps.FrontDoor.RouterApp/*
+    - azure-pipelines.yml
 
 
 

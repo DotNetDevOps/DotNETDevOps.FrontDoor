@@ -60,11 +60,19 @@
         {
           "route": "= /",
           "rewrite": "^.*$ /index.html",
-          "proxy_pass": "[blobFindVersion('http://dotnetdevops-cdn/libs/','dotnetdevops-front')]",
-          "features": {
-            "CopyXForwardedHeaders": true,
-            "AddXForwardedHeaders": true,
-            "ApplyCorrelationId": true
+          "proxy_pass": "[blobFindVersion('http://dotnetdevops-cdn/libs/','dotnetdevops-front','nuxt')]"
+        },
+        {
+          "route": "/",
+          "index": [ "index.html" ],
+          "proxy_pass": "[blobFindVersion('http://dotnetdevops-cdn/libs/','dotnetdevops-front','nuxt')]"
+        },
+        {
+          "route": "~* ^/(subscriptions/[^/]+/)?providers/(DotNETDevOps.AzureUsage)",
+          "proxy_pass": "https://localhost:44391/",
+          "health_check": {
+            "path": "/.well-known/live",
+            "interval": 60
           }
         },
         //{
@@ -76,17 +84,17 @@
         //    "ApplyCorrelationId": true
         //  }
         //},
-        {
-          "route": "/",
-          "proxy_pass": "https://localhost:8080/",
-          "health_check": {
-            "uri": "/",
-            "interval": 10,
-            "fails": 3,
-            "passes": 2,
-            "port": "80"
-          }
-        },
+        //{
+        //  "route": "/",
+        //  "proxy_pass": "http://localhost:3000/",
+        //  "health_check": {
+        //    "uri": "/",
+        //    "interval": 10,
+        //    "fails": 3,
+        //    "passes": 2,
+        //    "port": "80"
+        //  }
+        //},
         {
           "route": "/.well-known/acme-challenge/",
           "proxy_pass": "https://letsencrypt-provider/.well-known/acme-challenge/"

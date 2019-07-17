@@ -17,9 +17,14 @@ trigger:
 
 
 pr:
-- master
-- dev
-- releases/*
+  branches:
+    include:
+    - master
+    - dev
+  paths:
+    include:
+    - apps/DotNETDevOps.FrontDoor.FrontApp/*
+    - frontdoor-front.yml
 
 stages:
 - stage: BuildFrontend

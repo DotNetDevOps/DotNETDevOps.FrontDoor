@@ -13,7 +13,9 @@ using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using ProxyKit;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using IHostingEnvironment = Microsoft.AspNetCore.Hosting.IHostingEnvironment;
@@ -135,23 +137,52 @@ namespace DotNETDevOps.FrontDoor.RouterApp
 
         private async Task<HttpResponseMessage> BuildProxy(HttpContext context)
         {
+            
+            var config = context.Features.Get<BaseRoute>();
             var sw = Stopwatch.StartNew();
-            var config = context.Features.Get<BaseRoute>(); 
-
             var forwarded = await config.ForwardAsync(context);
             var timeToBuildForward = sw.Elapsed;
-            
 
-            var response = await forwarded
-                     .Send();
+            //Handle indexes 
+            if (config.Index.Any() && forwarded.UpstreamRequest.RequestUri.AbsolutePath.EndsWith("/"))
+            {
+                var originalUri = forwarded.UpstreamRequest.RequestUri;
+                var queue = new Queue<string>(config.Index);
+                while (queue.Any())
+                {
+                    var index = queue.Dequeue();
+                    UriBuilder builder = new UriBuilder(originalUri);
+                    builder.Path += index;
+                    forwarded.UpstreamRequest.RequestUri = builder.Uri;
+
+                    var response = await forwarded
+                        .Send();
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        // response.Headers.Remove("X-ARR-SSL");
+                        // response.Headers.Remove("X-AppService-Proto");
+                        var totalTime = sw.Elapsed;
+                        var sendtime = totalTime - timeToBuildForward;
+                        response.Headers.Add("X-ROUTER-TIMINGS", $"{timeToBuildForward}/{sendtime}/{totalTime}");
+                        return response;
+                    }
+                }
+            }
+
+            {
+
+                var response = await forwarded
+                         .Send();
 
 
-            // response.Headers.Remove("X-ARR-SSL");
-            // response.Headers.Remove("X-AppService-Proto");
-            var totalTime = sw.Elapsed;
-            var sendtime = totalTime - timeToBuildForward;
-            response.Headers.Add("X-ROUTER-TIMINGS", $"{timeToBuildForward}/{sendtime}/{totalTime}");
-            return response;
+                // response.Headers.Remove("X-ARR-SSL");
+                // response.Headers.Remove("X-AppService-Proto");
+                var totalTime = sw.Elapsed;
+                var sendtime = totalTime - timeToBuildForward;
+                response.Headers.Add("X-ROUTER-TIMINGS", $"{timeToBuildForward}/{sendtime}/{totalTime}");
+                return response;
+            }
         }
 
         private bool MatchRoutes(HttpContext arg)

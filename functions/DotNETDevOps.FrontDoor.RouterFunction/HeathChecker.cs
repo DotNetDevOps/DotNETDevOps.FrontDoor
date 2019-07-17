@@ -24,15 +24,22 @@ namespace DotNETDevOps.FrontDoor.RouterFunction
     public class HeathChecker
     {
         private readonly HealthCheckManager hostNameResolver;
+        private readonly IHostingEnvironment environment;
 
-        public HeathChecker(HealthCheckManager hostNameResolver)
+        public HeathChecker(HealthCheckManager hostNameResolver, IHostingEnvironment environment)
         {
             this.hostNameResolver = hostNameResolver;
+            this.environment = environment;
         }
         [FunctionName("HeathChecker")]
         public  Task Run([TimerTrigger("*/10 * * * * *")]TimerInfo myTimer, ILogger log)
         {
-            return hostNameResolver.Healthcheck(); 
+            if (!environment.IsDevelopment())
+            {
+                return hostNameResolver.Healthcheck();
+            }
+
+            return Task.CompletedTask;
         }
     }
 }

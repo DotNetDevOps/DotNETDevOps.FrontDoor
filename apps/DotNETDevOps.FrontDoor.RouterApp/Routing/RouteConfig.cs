@@ -89,6 +89,9 @@ namespace DotNETDevOps.FrontDoor.RouterApp
         [JsonProperty("proxy_pass")]
         public string ProxyPass { get; set; }
 
+        [JsonProperty("index")]
+        public string[] Index { get; set; } = Array.Empty<string>();
+
         [JsonProperty("proxy_set_header")]
         public Dictionary<string, string> ProxySetHeader { get; set; } = new Dictionary<string, string>();
 
@@ -150,6 +153,8 @@ namespace DotNETDevOps.FrontDoor.RouterApp
 
                 }
             }
+
+           
         }
         public async Task<ForwardContext> ForwardAsync(HttpContext context)
         {
@@ -176,6 +181,7 @@ namespace DotNETDevOps.FrontDoor.RouterApp
 
             RewriteUrl(context);
 
+            
             
           
             var forwarded = context
@@ -240,6 +246,7 @@ namespace DotNETDevOps.FrontDoor.RouterApp
         private static async Task<JToken> blobFindVersion(ExpressionContext document, JToken[] arguments)
         {
             var proxyUrl = arguments[0].ToString();
+          
             var url = new Uri(proxyUrl);
 
             var upstream = document.Upstream = document.Upstreams[url.Host].GetUpstreamHost();
@@ -247,8 +254,8 @@ namespace DotNETDevOps.FrontDoor.RouterApp
             proxyUrl = proxyUrl.Replace(url.Host, upstream.Host);
 
 
-            var cdn = new CDNHelper(proxyUrl,arguments[1].ToString());
-            var version =await cdn.GetAsync();
+            var cdn = new CDNHelper(proxyUrl, arguments[1].ToString());
+            var version =await cdn.GetAsync("*", arguments.Skip(2).FirstOrDefault()?.ToString());
 
             //  var configuration = document.HttpContext.RequestServices.GetRequiredService<IConfiguration>();
 
