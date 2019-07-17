@@ -244,23 +244,24 @@ namespace DotNETDevOps.FrontDoor.RouterApp
             return Task.FromResult((JToken)string.Join("", arguments.Select(v=>v.ToString())));
         }
 
-        private static async Task<JToken> blobFindVersion(ExpressionContext document, JToken[] arguments)
+        private static async Task<JToken> blobFindVersion(ExpressionContext context, JToken[] arguments)
         {
             var proxyUrl = arguments[0].ToString();
           
             var url = new Uri(proxyUrl);
 
-            var upstream = document.Upstream = document.Upstreams[url.Host].GetUpstreamHost();
+            var upstream = context.Upstream = context.Upstreams[url.Host].GetUpstreamHost();
 
             proxyUrl = proxyUrl.Replace(url.Host, upstream.Host);
 
-            var cacheHelperFactory = document.HttpContext.RequestServices.GetRequiredService<CDNHelperFactory>();
+            var cacheHelperFactory = context.HttpContext.RequestServices.GetRequiredService<CDNHelperFactory>();
 
             var cdn = cacheHelperFactory.CreateCDNHelper(proxyUrl, arguments[1].ToString()); // new CDNHelper(proxyUrl, arguments[1].ToString());
             var version =await cdn.GetAsync("*", arguments.Skip(2).FirstOrDefault()?.ToString());
 
             //  var configuration = document.HttpContext.RequestServices.GetRequiredService<IConfiguration>();
 
+            context.HttpContext.Response.Headers.Add("x-blobfind-version", version.Version);
 
             return proxyUrl + arguments[1].ToString() + "/" + version.Version +"/";
         }
