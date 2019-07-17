@@ -27,6 +27,7 @@ namespace DotNETDevOps.FrontDoor.RouterApp
         public Dictionary<string, Upstream> Upstreams { get;  set; }
 
         public UpstreamHostServer Upstream { get; set; }
+        public IServiceProvider Services => HttpContext.RequestServices;
     }
     public class HealthCheck
     {
@@ -253,8 +254,9 @@ namespace DotNETDevOps.FrontDoor.RouterApp
 
             proxyUrl = proxyUrl.Replace(url.Host, upstream.Host);
 
+            var cacheHelperFactory = document.HttpContext.RequestServices.GetRequiredService<CDNHelperFactory>();
 
-            var cdn = new CDNHelper(proxyUrl, arguments[1].ToString());
+            var cdn = cacheHelperFactory.CreateCDNHelper(proxyUrl, arguments[1].ToString()); // new CDNHelper(proxyUrl, arguments[1].ToString());
             var version =await cdn.GetAsync("*", arguments.Skip(2).FirstOrDefault()?.ToString());
 
             //  var configuration = document.HttpContext.RequestServices.GetRequiredService<IConfiguration>();

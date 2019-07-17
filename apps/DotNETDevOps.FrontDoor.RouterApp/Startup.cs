@@ -1,4 +1,5 @@
 ﻿using DotNETDevOps.FrontDoor.AspNetCore;
+using DotNETDevOps.FrontDoor.RouterApp.Azure.Blob;
 using DotNETDevOps.JsonFunctions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
@@ -40,6 +41,7 @@ namespace DotNETDevOps.FrontDoor.RouterApp
             services.AddSingleton<HealthCheckRunner>();
               services.AddSingleton<IHostedService, HealthCheckRunner>(sp => sp.GetRequiredService<HealthCheckRunner>());
 
+            services.AddSingleton<CDNHelperFactory>();
 
 
 

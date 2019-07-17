@@ -98,6 +98,7 @@ stages:
         buildType: 'current'
         artifactName: 'drop'
         targetPath: '$(System.ArtifactsDirectory)'
+
     - task: VersionReaderTask@1
       inputs:
         searchPattern: 'functions/DotNETDevOps.FrontDoor.RouterFunction/*.csproj'

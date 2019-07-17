@@ -1,4 +1,5 @@
-﻿using Microsoft.WindowsAzure.Storage.Blob;
+﻿using Microsoft.Extensions.Caching.Memory;
+using Microsoft.WindowsAzure.Storage.Blob;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -46,9 +47,48 @@ namespace DotNETDevOps.FrontDoor.RouterApp.Azure.Blob
     {
         public string Version { get; set; }
     }
+    public class CDNHelperFactory
+    {
+        private MemoryCache _cache = new MemoryCache(new MemoryCacheOptions()
+        {
+            SizeLimit = 12
+        });
+
+        
+        public CDNHelper CreateCDNHelper(string url, string lib)
+        {
+            var key = url + lib;
+            CDNHelper cacheEntry;
+            if (!_cache.TryGetValue(key, out cacheEntry))// Look for cache key.
+            {
+                // Key not in cache, so get data.
+                cacheEntry = new CDNHelper(url, lib);
+
+                var cacheEntryOptions = new MemoryCacheEntryOptions()
+                 .SetSize(1)//Size amount
+                            //Priority on removing when reaching size limit (memory pressure)
+                    .SetPriority(CacheItemPriority.High)
+                    // Keep in cache for this time, reset time if accessed.
+                    .SetSlidingExpiration(TimeSpan.FromSeconds(60))
+                    // Remove from cache after this time, regardless of sliding expiration
+                    .SetAbsoluteExpiration(TimeSpan.FromSeconds(60*5));
+
+                // Save data in cache.
+                _cache.Set(key, cacheEntry, cacheEntryOptions);
+            }
+            return cacheEntry;
+
+          
+        }
+    }
     public class CDNHelper
     {
-        
+
+        private MemoryCache _cache = new MemoryCache(new MemoryCacheOptions()
+        {
+            SizeLimit = 12
+        });
+
         public string url { get; }
         public string lib { get; }
 
@@ -59,10 +99,31 @@ namespace DotNETDevOps.FrontDoor.RouterApp.Azure.Blob
             
         }
         private static char[] splits = new[] { '/' };
-      
 
-        public async Task<LibVersion> GetAsync(string filter = "*", string prerelease =null)
+
+       
+
+        public  Task<LibVersion> GetAsync(string filter = "*", string prerelease =null)
         {
+            var key = filter + prerelease;
+            
+
+            return _cache.GetOrCreateAsync(key, entry=> Factory(entry,filter,prerelease));
+
+            
+
+        }
+
+        private async Task<LibVersion> Factory(ICacheEntry arg,string filter, string prerelease)
+        {
+
+            arg.SetSize(1);
+            arg.SetPriority(CacheItemPriority.High)
+                  // Keep in cache for this time, reset time if accessed.
+                  .SetSlidingExpiration(TimeSpan.FromSeconds(60))
+                  // Remove from cache after this time, regardless of sliding expiration
+                  .SetAbsoluteExpiration(TimeSpan.FromSeconds(60 * 5));
+
             var blob = new CloudBlobContainer(new Uri(url));
             if (!await blob.ExistsAsync())
             {
@@ -70,8 +131,10 @@ namespace DotNETDevOps.FrontDoor.RouterApp.Azure.Blob
             }
             var versions = await blob.ListBlobsSegmentedAsync($"{lib}/", null);
 
+
+
             var sems = versions.Results.OfType<CloudBlobDirectory>()
-                .Where(c => SemanticVersion.TryParse(c.Prefix.Split(splits, StringSplitOptions.RemoveEmptyEntries).Last(), out SemanticVersion semver) && semver.Satisfies(filter) && (string.IsNullOrEmpty(prerelease) ||string.IsNullOrEmpty(semver.SpecialVersion) || semver.SpecialVersion.StartsWith(prerelease)))                
+                .Where(c => SemanticVersion.TryParse(c.Prefix.Split(splits, StringSplitOptions.RemoveEmptyEntries).Last(), out SemanticVersion semver) && semver.Satisfies(filter) && (string.IsNullOrEmpty(prerelease) || string.IsNullOrEmpty(semver.SpecialVersion) || semver.SpecialVersion.StartsWith(prerelease)))
                 .OrderByDescending(c => new SemanticVersion(c.Prefix.Split(splits, StringSplitOptions.RemoveEmptyEntries).Last()))
                 .ToArray();
             if (!sems.Any())
@@ -79,8 +142,10 @@ namespace DotNETDevOps.FrontDoor.RouterApp.Azure.Blob
                 return null;
             }
 
-            return new LibVersion { Version = sems.FirstOrDefault().Prefix.Split(splits, StringSplitOptions.RemoveEmptyEntries).Last() };
+                               
+          
 
+            return new LibVersion { Version = sems.FirstOrDefault().Prefix.Split(splits, StringSplitOptions.RemoveEmptyEntries).Last() };
         }
     }
 }
