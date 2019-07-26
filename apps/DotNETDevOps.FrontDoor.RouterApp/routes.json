@@ -32,6 +32,14 @@
         }
       ]
     },
+    "io-board-forms-provider": {
+      "servers": [
+        {
+          "host": "io-board-forms.azurewebsites.net",
+          "weigth": 1
+        }
+      ]
+    },
     "letsencrypt-provider": {
       "servers": [
         {
@@ -55,6 +63,15 @@
 
   },
   "servers": [
+    {
+      "hostnames": [ "api.io-board.com" ],
+      "locations": [
+        {
+          "route": "~* ^/providers/(io-board.forms)",
+          "proxy_pass": "https://io-board-forms-provider/"
+        }
+      ]
+    },
     {
       "locations": [
         {

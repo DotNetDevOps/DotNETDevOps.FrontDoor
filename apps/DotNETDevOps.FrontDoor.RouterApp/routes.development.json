@@ -75,6 +75,14 @@
             "interval": 60
           }
         },
+        {
+          "route": "~* ^/(subscriptions/[^/]+/)?providers/(com.kjeldager.twilio)",
+          "proxy_pass": "http://localhost:7020/"
+        },
+        {
+          "route": "~* ^/(subscriptions/[^/]+/)?providers/(io-board.forms)",
+          "proxy_pass": "http://localhost:7030/"
+        },
         //{
         //  "route": "/",
         //  "proxy_pass": "[blobFindVersion('http://dotnetdevops-cdn/libs/','dotnetdevops-front')]",
