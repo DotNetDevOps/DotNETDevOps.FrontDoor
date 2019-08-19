@@ -29,11 +29,11 @@ namespace DotNETDevOps.FrontDoor.RouterApp
                 {
                     if (context.Request.Path.StartsWithSegments(Prefix.TrimEnd('/'), out var rest))
                     {
-                        if (rest == "/")
-                        {
-                            context.Request.Path = null;
-                        }
-                        else
+                        //if (rest == "/")
+                        //{
+                        //    context.Request.Path = null;
+                        //}
+                        //else
                         {
                             context.Request.Path = rest;
                         }
