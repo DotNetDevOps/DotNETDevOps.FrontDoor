@@ -1,5 +1,13 @@
 {
   "upstreams": {
+    "io-board-cdn": {
+      "servers": [
+        {
+          "host": "ioboard.blob.core.windows.net",
+          "weigth": 1
+        }
+      ]
+    },
     "dotnetdevops-cdn": {
       "servers": [
         {
@@ -63,6 +71,21 @@
 
   },
   "servers": [
+    {
+      "hostnames": [ "io-board.com" ],
+      "locations": [
+        {
+          "route": "= /forms/",
+          "rewrite": "^.*$ /index.html",
+          "proxy_pass": "[blobFindVersion('http://io-board-cdn/libs/','com.io-board.forms')]"
+        },
+        {
+          "route": "/forms/",
+          "index": [ "index.html" ],
+          "proxy_pass": "[blobFindVersion('http://io-board-cdn/libs/','com.io-board.forms')]"
+        }
+      ]
+    },
     {
       "hostnames": [ "api.io-board.com" ],
       "locations": [
