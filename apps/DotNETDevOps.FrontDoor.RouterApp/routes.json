@@ -72,6 +72,15 @@
   },
   "servers": [
     {
+      "hostnames": [ "*.forms.io-board.com" ],
+      "locations": [
+        {
+          "route": "/",
+          "proxy_pass": "https://dotnetdevops.eu.ngrok.io/"
+        }
+      ]
+    },
+    {
       "hostnames": [ "io-board.com" ],
       "locations": [
         {

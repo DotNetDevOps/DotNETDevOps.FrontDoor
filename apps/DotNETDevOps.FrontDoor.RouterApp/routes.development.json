@@ -99,7 +99,7 @@
         },
         {
           "route": "~* ^/(subscriptions/[^/]+/)?providers/(io-board.forms)",
-          "proxy_pass": "http://localhost:7030/"
+          "proxy_pass": "https://localhost:44337/"
         },
         //{
         //  "route": "/",

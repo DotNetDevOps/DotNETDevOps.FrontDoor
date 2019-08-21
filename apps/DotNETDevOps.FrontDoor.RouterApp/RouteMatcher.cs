@@ -44,6 +44,14 @@ namespace DotNETDevOps.FrontDoor.RouterApp
             if (routes.ContainsKey(arg.Request.Host.Host) && FindMatch(arg, routes[arg.Request.Host.Host], out route ))
                 return route;
 
+            //*.forms.io-board.com | test.forms.io-board.com
+            foreach (var host in routes.Where(k => k.Key.StartsWith("*") && arg.Request.Host.Host.EndsWith(k.Key.Substring(1))))
+            {
+                if (FindMatch(arg, host.Value, out route))
+                    return route;
+            }
+            
+
             return null;
         }
 
