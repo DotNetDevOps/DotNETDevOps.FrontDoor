@@ -46,7 +46,7 @@ namespace DotNETDevOps.FrontDoor.RouterApp
             if (forwardContext.HttpContext.Request.Headers.TryGetValue(XForwardedExtensions.XForwardedProto, out var protoValues))
             {
                 headers.Remove(XForwardedExtensions.XForwardedProto);
-                headers.TryAddWithoutValidation(XForwardedExtensions.XForwardedProto, protoValues.Distinct().ToArray());
+                headers.TryAddWithoutValidation(XForwardedExtensions.XForwardedProto, protoValues.SelectMany(k=>k.Split(',').Select(t=>t.Trim())).ToArray());
             }
 
             if (forwardContext.HttpContext.Request.Headers.TryGetValue(XForwardedExtensions.XForwardedPathBase, out var pathBaseValues))
@@ -127,13 +127,13 @@ namespace DotNETDevOps.FrontDoor.RouterApp
                 await r.Response.WriteAsync(JsonConvert.SerializeObject(r.RequestServices.GetRequiredService<IRouteOptionsFactory>().GetRoutes()));
             }));
 
-            //app.Use(async (ctx,next) =>
+            //app.Use(async (ctx, next) =>
             //{
             //    var sb = new StringBuilder();
             //    sb.AppendLine($"{ctx.Request.Method} {ctx.Request.GetDisplayUrl()}");
-            //    foreach(var h in ctx.Request.Headers)
+            //    foreach (var h in ctx.Request.Headers)
             //    {
-            //        sb.AppendLine($" {h.Key} {string.Join(",",h.Value)}");
+            //        sb.AppendLine($" {h.Key} {string.Join(",", h.Value)}");
             //    }
 
             //    var str = sb.ToString();
