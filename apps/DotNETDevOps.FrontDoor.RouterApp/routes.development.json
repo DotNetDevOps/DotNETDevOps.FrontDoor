@@ -63,7 +63,17 @@
   },
   "servers": [
     {
-      "hostnames": [ "dotnetdevops.eu.ngrok.io" , "localhost"],
+      "hostnames": [ "*.forms.io-board.com" ],
+      "locations": [
+        {
+          "route": "/",
+          "rewrite": "^.*$ /providers/io-board.forms/viewer",
+          "proxy_pass": "https://localhost:44337/"
+        }
+      ]
+    },
+    {
+      "hostnames": [ "dotnetdevops.eu.ngrok.io", "localhost" ],
       "locations": [
         {
           "route": "= /forms/",

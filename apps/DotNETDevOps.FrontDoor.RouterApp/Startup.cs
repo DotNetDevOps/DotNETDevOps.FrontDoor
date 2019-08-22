@@ -25,41 +25,6 @@ using IHostingEnvironment = Microsoft.AspNetCore.Hosting.IHostingEnvironment;
 namespace DotNETDevOps.FrontDoor.RouterApp
 {
 
-    public static class myex
-    {
-        public static ForwardContext CopyXForwardedHeaders(this ForwardContext forwardContext)
-        {
-            var headers = forwardContext.UpstreamRequest.Headers;
-
-            if (forwardContext.HttpContext.Request.Headers.TryGetValue(XForwardedExtensions.XForwardedFor, out var forValues))
-            {
-                headers.Remove(XForwardedExtensions.XForwardedFor);
-                headers.TryAddWithoutValidation(XForwardedExtensions.XForwardedFor, forValues.ToArray());
-            }
-
-            if (forwardContext.HttpContext.Request.Headers.TryGetValue(XForwardedExtensions.XForwardedHost, out var hostValues))
-            {
-                headers.Remove(XForwardedExtensions.XForwardedHost);
-                headers.TryAddWithoutValidation(XForwardedExtensions.XForwardedHost, hostValues.ToArray());
-            }
-
-            if (forwardContext.HttpContext.Request.Headers.TryGetValue(XForwardedExtensions.XForwardedProto, out var protoValues))
-            {
-               // var a = protoValues.SelectMany(k => k.Split(',').Select(t => t.Trim())).ToArray();
-                headers.Remove(XForwardedExtensions.XForwardedProto);
-                headers.TryAddWithoutValidation(XForwardedExtensions.XForwardedProto, protoValues.SelectMany(k=>k.Split(',').Select(t=>t.Trim())).Distinct().ToArray());
-            }
-
-            if (forwardContext.HttpContext.Request.Headers.TryGetValue(XForwardedExtensions.XForwardedPathBase, out var pathBaseValues))
-            {
-                headers.Remove(XForwardedExtensions.XForwardedPathBase);
-                headers.TryAddWithoutValidation(XForwardedExtensions.XForwardedPathBase, pathBaseValues.ToArray());
-            }
-
-            return forwardContext;
-        }
-    }
-
     public class Startup
     {
         private readonly IHostingEnvironment hostingEnvironment;
