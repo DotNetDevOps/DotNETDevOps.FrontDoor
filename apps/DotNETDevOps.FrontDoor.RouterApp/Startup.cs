@@ -45,8 +45,9 @@ namespace DotNETDevOps.FrontDoor.RouterApp
 
             if (forwardContext.HttpContext.Request.Headers.TryGetValue(XForwardedExtensions.XForwardedProto, out var protoValues))
             {
+               // var a = protoValues.SelectMany(k => k.Split(',').Select(t => t.Trim())).ToArray();
                 headers.Remove(XForwardedExtensions.XForwardedProto);
-                headers.TryAddWithoutValidation(XForwardedExtensions.XForwardedProto, protoValues.SelectMany(k=>k.Split(',').Select(t=>t.Trim())).ToArray());
+                headers.TryAddWithoutValidation(XForwardedExtensions.XForwardedProto, protoValues.SelectMany(k=>k.Split(',').Select(t=>t.Trim())).Distinct().ToArray());
             }
 
             if (forwardContext.HttpContext.Request.Headers.TryGetValue(XForwardedExtensions.XForwardedPathBase, out var pathBaseValues))
