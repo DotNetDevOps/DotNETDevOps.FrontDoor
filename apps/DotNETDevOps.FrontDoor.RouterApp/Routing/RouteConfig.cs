@@ -187,7 +187,7 @@ namespace DotNETDevOps.FrontDoor.RouterApp
           
             var forwarded = context
                     .ForwardTo(proxyUrl)
-                    .CopyXForwardedHeaders()
+                   // .CopyXForwardedHeaders()
                     .AddXForwardedHeaders()
                     .ApplyCorrelationId();
 
