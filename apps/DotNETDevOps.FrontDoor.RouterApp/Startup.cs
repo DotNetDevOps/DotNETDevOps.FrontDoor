@@ -18,11 +18,46 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
 using IHostingEnvironment = Microsoft.AspNetCore.Hosting.IHostingEnvironment;
 
 namespace DotNETDevOps.FrontDoor.RouterApp
 {
+
+    public static class myex
+    {
+        public static ForwardContext CopyXForwardedHeaders(this ForwardContext forwardContext)
+        {
+            var headers = forwardContext.UpstreamRequest.Headers;
+
+            if (forwardContext.HttpContext.Request.Headers.TryGetValue(XForwardedExtensions.XForwardedFor, out var forValues))
+            {
+                headers.Remove(XForwardedExtensions.XForwardedFor);
+                headers.TryAddWithoutValidation(XForwardedExtensions.XForwardedFor, forValues.ToArray());
+            }
+
+            if (forwardContext.HttpContext.Request.Headers.TryGetValue(XForwardedExtensions.XForwardedHost, out var hostValues))
+            {
+                headers.Remove(XForwardedExtensions.XForwardedHost);
+                headers.TryAddWithoutValidation(XForwardedExtensions.XForwardedHost, hostValues.ToArray());
+            }
+
+            if (forwardContext.HttpContext.Request.Headers.TryGetValue(XForwardedExtensions.XForwardedProto, out var protoValues))
+            {
+                headers.Remove(XForwardedExtensions.XForwardedProto);
+                headers.TryAddWithoutValidation(XForwardedExtensions.XForwardedProto, protoValues.Distinct().ToArray());
+            }
+
+            if (forwardContext.HttpContext.Request.Headers.TryGetValue(XForwardedExtensions.XForwardedPathBase, out var pathBaseValues))
+            {
+                headers.Remove(XForwardedExtensions.XForwardedPathBase);
+                headers.TryAddWithoutValidation(XForwardedExtensions.XForwardedPathBase, pathBaseValues.ToArray());
+            }
+
+            return forwardContext;
+        }
+    }
 
     public class Startup
     {
@@ -36,6 +71,8 @@ namespace DotNETDevOps.FrontDoor.RouterApp
         }
         public void ConfigureServices(IServiceCollection services)
         {
+           // services.WithXForwardedHeaders();
+
             services.AddProxy();
             services.AddHttpClient("heathcheck");
             services.AddSingleton<HealthCheckRunner>();
@@ -90,6 +127,19 @@ namespace DotNETDevOps.FrontDoor.RouterApp
                 await r.Response.WriteAsync(JsonConvert.SerializeObject(r.RequestServices.GetRequiredService<IRouteOptionsFactory>().GetRoutes()));
             }));
 
+            //app.Use(async (ctx,next) =>
+            //{
+            //    var sb = new StringBuilder();
+            //    sb.AppendLine($"{ctx.Request.Method} {ctx.Request.GetDisplayUrl()}");
+            //    foreach(var h in ctx.Request.Headers)
+            //    {
+            //        sb.AppendLine($" {h.Key} {string.Join(",",h.Value)}");
+            //    }
+
+            //    var str = sb.ToString();
+            //    Console.WriteLine(str);
+            //    await next();
+            //});
             //Use the configuration router          
 
             app.UseWhen(
