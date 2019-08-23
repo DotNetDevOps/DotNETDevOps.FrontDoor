@@ -43,7 +43,7 @@
     "io-board-forms-provider": {
       "servers": [
         {
-          "host": "ioboard-forms-dev.azurewebsites.net",
+          "host": "io-board-forms-dev.azurewebsites.net",
           "weigth": 1
         }
       ]
