@@ -68,7 +68,6 @@
         }
       ]
     }
-
   },
   "servers": [
     {
@@ -101,7 +100,8 @@
       "locations": [
         {
           "route": "~* ^/providers/(io-board.forms)",
-          "proxy_pass": "https://io-board-forms-provider/"
+          "proxy_pass": "https://io-board-forms-provider/",
+          "cors": "[CorsPolicyBuilder().AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()]"
         }
       ]
     },

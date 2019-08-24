@@ -16,6 +16,14 @@
         }
       ]
     },
+    "dotnetdevops-provider": {
+      "servers": [
+        {
+          "host": "localhost:44340",
+          "weigth": 1
+        }
+      ]
+    },
     "dotnetdevops-www": {
       "servers": [
         {
@@ -109,7 +117,8 @@
         },
         {
           "route": "~* ^/(subscriptions/[^/]+/)?providers/(io-board.forms)",
-          "proxy_pass": "https://localhost:44337/"
+          "proxy_pass": "https://localhost:44337/",
+          "cors": "[CorsPolicyBuilder().AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()]"
         },
         //{
         //  "route": "/",
@@ -145,6 +154,10 @@
             "passes": 2,
             "port": "80"
           }
+        },
+        {
+          "route": "~* ^/providers/(DotNetDevOps.AzureTemplates)",
+          "proxy_pass": "http://dotnetdevops-provider/"
         },
         {
           "route": "= /frontdoor/",

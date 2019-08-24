@@ -2,6 +2,7 @@
 using DotNETDevOps.FrontDoor.RouterApp.Azure.Blob;
 using DotNETDevOps.JsonFunctions;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -10,8 +11,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using ProxyKit;
 using System;
 using System.Collections.Generic;
@@ -24,7 +27,95 @@ using IHostingEnvironment = Microsoft.AspNetCore.Hosting.IHostingEnvironment;
 
 namespace DotNETDevOps.FrontDoor.RouterApp
 {
+   public class CorsBuilderContext : ICorsPolicyProvider
+    {
+        public CorsBuilderContext(ILogger<CorsBuilderContext> logger)
+        {
+            this.logger = logger;
+        }
+        public Dictionary<string, CorsPolicy> Builders = new Dictionary<string, CorsPolicy>();
+        private readonly ILogger<CorsBuilderContext> logger;
 
+        // public string ActiveBuilderName { get;set; }
+        // public CorsPolicyBuilder Active => Builders.ContainsKey(ActiveBuilderName) ? Builders[ActiveBuilderName] : Builders[ActiveBuilderName] = new CorsPolicyBuilder();
+
+        public async Task<CorsPolicy> GetPolicyAsync(HttpContext context, string policyName)
+        {
+            var config = context.Features.Get<BaseRoute>();
+            if (!string.IsNullOrEmpty(config.Cors))
+            {
+                policyName = config.Cors.ToMD5Hash();
+                if (!Builders.ContainsKey(policyName))
+                {
+                    var ex = new ExpressionParser<CorsPolicyBuilder>(Options.Create(new ExpressionParserOptions<CorsPolicyBuilder>
+                    {
+                        ThrowOnError = false,
+                        Document = new CorsPolicyBuilder()
+                    }), logger, new CorsFunctions());
+
+                     await ex.EvaluateAsync(config.Cors);
+                    return Builders[policyName] = ex.Document.Build();
+                }
+                return Builders[policyName];
+
+
+                //    var config = sp.GetRequiredService<IRouteOptionsFactory>();
+                //    foreach(var cors in config.GetRoutes().SelectMany(v => v.Value).Where(k => !string.IsNullOrEmpty(k.Cors)))
+                //    {
+                //        ex.Document.ActiveBuilderName = cors.Cors.ToMD5Hash();
+                //        ex.EvaluateAsync(cors.Cors).GetAwaiter().GetResult();
+                //    }
+                //    services.AddCors(o =>
+                //    {
+                //        foreach (var c in ex.Document.Builders)
+                //            o.AddPolicy(c.Key, c.Value.Build());
+                //    });
+            }
+            return null;
+
+        }
+    }
+
+    public class CorsFunctions : IExpressionFunctionFactory<CorsPolicyBuilder>
+    {
+        public ExpressionParser<CorsPolicyBuilder>.ExpressionFunction Get(string name)
+        {
+            //CorsPolicyBuilder().AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()
+            switch (name)
+            {
+                case "CorsPolicyBuilder":
+                    return CorsPolicyBuilder;
+                case "AllowAnyOrigin":
+                    return AllowAnyOrigin;
+                case "AllowAnyMethod":
+                    return AllowAnyMethod;
+                case "AllowAnyHeader":
+                    return AllowAnyHeader;
+                default:
+                    throw new NotImplementedException();
+            }
+        }
+        public Task<JToken> CorsPolicyBuilder(CorsPolicyBuilder document,JToken[] args)
+        {
+             
+            return Task.FromResult(JToken.FromObject(new { }));
+        }
+        public Task<JToken> AllowAnyOrigin(CorsPolicyBuilder document, JToken[] args)
+        {
+            document.AllowAnyOrigin();
+            return Task.FromResult(args.First());
+        }
+        public Task<JToken> AllowAnyMethod(CorsPolicyBuilder document, JToken[] args)
+        {
+            document.AllowAnyMethod();
+            return Task.FromResult(args.First());
+        }
+        public Task<JToken> AllowAnyHeader(CorsPolicyBuilder document, JToken[] args)
+        {
+            document.AllowAnyHeader();
+            return Task.FromResult(args.First());
+        }
+    }
     public class Startup
     {
         private readonly IHostingEnvironment hostingEnvironment;
@@ -67,7 +158,33 @@ namespace DotNETDevOps.FrontDoor.RouterApp
 
 
             services.AddHealthChecks();
-           
+
+            //using (var sp = services.BuildServiceProvider())
+            //{
+
+            //    var ex = new ExpressionParser<CorsBuilderContext>(Options.Create(new ExpressionParserOptions<CorsBuilderContext>
+            //    {
+            //        ThrowOnError = false,
+            //        Document = new CorsBuilderContext()
+            //    }), sp.GetService<ILogger<ExpressionParser<ExpressionContext>>>(), new CorsFunctions()); ;
+
+            //    var config = sp.GetRequiredService<IRouteOptionsFactory>();
+            //    foreach(var cors in config.GetRoutes().SelectMany(v => v.Value).Where(k => !string.IsNullOrEmpty(k.Cors)))
+            //    {
+            //        ex.Document.ActiveBuilderName = cors.Cors.ToMD5Hash();
+            //        ex.EvaluateAsync(cors.Cors).GetAwaiter().GetResult();
+            //    }
+            //    services.AddCors(o =>
+            //    {
+            //        foreach (var c in ex.Document.Builders)
+            //            o.AddPolicy(c.Key, c.Value.Build());
+            //    });
+            //}
+
+            services.AddCors();
+            services.AddSingleton<ICorsPolicyProvider, CorsBuilderContext>();
+
+
         }
 
 
@@ -83,6 +200,8 @@ namespace DotNETDevOps.FrontDoor.RouterApp
             {
                  Predicate = (_)=>false
             });
+
+         
 
             app.UseDeveloperExceptionPage();
 
@@ -131,6 +250,8 @@ namespace DotNETDevOps.FrontDoor.RouterApp
 
         private void ProxyRoute(IApplicationBuilder app)
         {
+            app.UseCors();
+
             app.Use(async (ctx, next) =>
             {
                 if (ctx.WebSockets.IsWebSocketRequest)
@@ -147,7 +268,8 @@ namespace DotNETDevOps.FrontDoor.RouterApp
                 }
 
             });
-
+            
+           
 
 
             app.RunProxy(BuildProxy);
@@ -203,13 +325,20 @@ namespace DotNETDevOps.FrontDoor.RouterApp
             }
         }
 
-        private bool MatchRoutes(HttpContext arg)
+        private bool MatchRoutes(HttpContext context)
         {
-            var findMatch = arg.RequestServices.GetRequiredService<RouteMatcher>().FindMatch(arg);
+            var findMatch = context.RequestServices.GetRequiredService<RouteMatcher>().FindMatch(context);
 
             if (findMatch != null)
             {
-                arg.Features.Set(findMatch);
+                var ex = new ExpressionParser<ExpressionContext>(Options.Create(new ExpressionParserOptions<ExpressionContext>
+                {
+                    ThrowOnError = false,
+                    Document  = new ExpressionContext { BaseRoute = findMatch, HttpContext = context, Upstreams = findMatch.Upstreams }
+                }), context.RequestServices.GetService<ILogger<ExpressionParser<ExpressionContext>>>(), findMatch);
+
+                context.Features.Set(ex);
+                context.Features.Set(findMatch);
                 return true;
             }
 

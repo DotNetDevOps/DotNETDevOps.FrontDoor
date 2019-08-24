@@ -90,6 +90,9 @@ namespace DotNETDevOps.FrontDoor.RouterApp
         [JsonProperty("proxy_pass")]
         public string ProxyPass { get; set; }
 
+        [JsonProperty("cors")]
+        public string Cors { get; set; }
+
         [JsonProperty("index")]
         public string[] Index { get; set; } = Array.Empty<string>();
 
@@ -159,13 +162,14 @@ namespace DotNETDevOps.FrontDoor.RouterApp
         }
         public async Task<ForwardContext> ForwardAsync(HttpContext context)
         {
-            ExpressionContext expressionContext = null;
+            // ExpressionContext expressionContext = null;
+            var ex = context.Features.Get<ExpressionParser<ExpressionContext>>();
+            var proxyUrl = ProxyPass;
 
-              var proxyUrl = ProxyPass;
             if (proxyUrl.StartsWith("["))
             {
-                var ex = new ExpressionParser<ExpressionContext>(Options.Create(new ExpressionParserOptions<ExpressionContext> {
-                    ThrowOnError = false, Document = expressionContext= new ExpressionContext { BaseRoute = this, HttpContext = context, Upstreams=this.Upstreams  } }), context.RequestServices.GetService<ILogger< ExpressionParser<ExpressionContext>>>(), this);
+                //var ex = new ExpressionParser<ExpressionContext>(Options.Create(new ExpressionParserOptions<ExpressionContext> {
+                //    ThrowOnError = false, Document = expressionContext= new ExpressionContext { BaseRoute = this, HttpContext = context, Upstreams=this.Upstreams  } }), context.RequestServices.GetService<ILogger< ExpressionParser<ExpressionContext>>>(), this);
 
                 proxyUrl = (await ex.EvaluateAsync(proxyUrl)).ToString();
             }
@@ -174,7 +178,7 @@ namespace DotNETDevOps.FrontDoor.RouterApp
             
             if (Upstreams.ContainsKey(url.Host))
             {
-                var upstream = expressionContext?.Upstream ?? Upstreams[url.Host].GetUpstreamHost();
+                var upstream = ex.Document?.Upstream ?? Upstreams[url.Host].GetUpstreamHost();
 
                 proxyUrl = proxyUrl.Replace(url.Host, upstream.Host);
 
