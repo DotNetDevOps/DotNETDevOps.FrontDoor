@@ -36,6 +36,7 @@ namespace DotNETDevOps.FrontDoor.RouterApp
             if (context.Request.Path.StartsWithSegments(Prefix.TrimEnd('/'),out var rest))
             {
                 context.Request.Path = rest;
+                context.Request.PathBase = Prefix.TrimEnd('/');
             }
 
             base.RewriteUrl(context);

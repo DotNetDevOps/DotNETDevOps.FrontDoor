@@ -102,6 +102,11 @@
           "route": "~* ^/providers/(io-board.forms)",
           "proxy_pass": "https://io-board-forms-provider/",
           "cors": "[CorsPolicyBuilder().AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()]"
+        },
+        {
+          "route": "~* ^/(subscriptions/[^/]+/)?providers/(IO-Board.DataIngestor)",
+          "proxy_pass": "https://io-board-data-ingestor-ioboard-dataingestor-serviceprovi-dev.azurewebsites.net/",
+          "cors": "[CorsPolicyBuilder().AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader().WithExposedHeaders('Location')]"
         }
       ]
     },
