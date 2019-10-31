@@ -24,6 +24,14 @@
         }
       ]
     },
+    "sociallink-provider": {
+      "servers": [
+        {
+          "host": "localhost:7071",
+          "weigth": 1
+        }
+      ]
+    },
     "dotnetdevops-www": {
       "servers": [
         {
@@ -70,6 +78,57 @@
     }
   },
   "servers": [
+    {
+      "hostnames": [ "io-board.eu.ngrok.io" ],
+      "locations": [
+        {
+          "route": "/identity/",
+          "proxy_pass": "http://localhost:13000/"
+          //  "cors": "[CorsPolicyBuilder().AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader().WithExposedHeaders('Location')]"
+        },
+        {
+          "route": "= /smscph/",
+          "rewrite": "^.*$ /index.html",
+          "proxy_pass": "https://localhost:44397/"
+        },
+        {
+          "route": "~* ^/(subscriptions/[^/]+/)?providers/(EarthML.AssetsManagment)",
+          "proxy_pass": "http://localhost:7423/",
+          "cors": "[CorsPolicyBuilder().AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader().WithExposedHeaders('Location')]"
+        },
+        {
+          "route": "/smscph/",
+          "proxy_pass": "https://localhost:44397/"
+        },
+        {
+          "route": "/.well-known/acme-challenge/",
+          "proxy_pass": "https://letsencrypt-provider/.well-known/acme-challenge/"
+        },
+        {
+          "route": "~* ^/providers/(DotNETDevOps.LetsEncrypt)",
+          "proxy_pass": "https://letsencrypt-provider/"
+        },
+        {
+          "route": "~* ^/providers/(Kjeldager.SocialLink)",
+          "proxy_pass": "http://sociallink-provider/",
+          "cors": "[CorsPolicyBuilder().AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader().WithExposedHeaders('Location')]"
+        },
+        {
+          "route": "~* ^/(subscriptions/[^/]+/)?providers/(IO-Board.DataIngestor)",
+          "proxy_pass": "https://localhost:44386/",
+          "cors": "[CorsPolicyBuilder().AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader().WithExposedHeaders('Location')]"
+        },
+        {
+          "route": "~* ^/(subscriptions/[^/]+/)?provider/(IO-Board.DataIngestor)",
+          "proxy_pass": "https://localhost:44386/",
+          "cors": "[CorsPolicyBuilder().AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader().WithExposedHeaders('Location')]"
+        },
+        {
+          "route": "~* ^/(subscriptions/[^/]+/)?providers/(smscph.gateway)",
+          "proxy_pass": "http://localhost:7071/"
+        }
+      ]
+    },
     {
       "hostnames": [ "*.forms.io-board.com" ],
       "locations": [

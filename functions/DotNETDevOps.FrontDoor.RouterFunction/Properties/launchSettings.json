@@ -2,7 +2,7 @@
   "profiles": {
     "DotNETDevOps.FrontDoor.RouterFunction": {
       "commandName": "Project",
-      "commandLineArgs": "host start --pause-on-error -port 12500 --useHttps --cert c:/dev/CN=dotnetdevops.eu.ngrok.io.pfx --password c:/dev/CN=dotnetdevops.eu.ngrok.io.pfx.key",
+      "commandLineArgs": "host start --pause-on-error -port 12500 --useHttps --cert c:/dev/CN=io-board.eu.ngrok.io.pfx --password c:/dev/null.key",
       "launchBrowser": true,
       "launchUrl": "http://localhost:12500",
       "environmentVariables": {

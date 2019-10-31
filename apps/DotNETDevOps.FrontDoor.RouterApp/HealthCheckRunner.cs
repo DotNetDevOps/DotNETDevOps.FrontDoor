@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -13,6 +14,8 @@ namespace DotNETDevOps.FrontDoor.RouterApp
         private List<HeathCheckItem> data;
         private readonly IHttpClientFactory httpClientFactory;
         private readonly ILogger<HealthCheckRunner> logger;
+
+        public IReadOnlyList<HeathCheckItem> Items => data;
 
         public HealthCheckRunner(IHttpClientFactory httpClientFactory, ILogger<HealthCheckRunner> logger)
         {
@@ -103,7 +106,7 @@ namespace DotNETDevOps.FrontDoor.RouterApp
                                 try
                                 {
                                     var resp = await http.SendAsync(new HttpRequestMessage(HttpMethod.Get, item.Url));
-
+                                   
                                     if (!resp.IsSuccessStatusCode)
                                     {
                                         logger.LogWarning("{url} is not live: {status}", item.Url, resp.StatusCode);
@@ -154,5 +157,7 @@ namespace DotNETDevOps.FrontDoor.RouterApp
                 _syncLock.Release();
             }
         }
+
+
     }
 }
