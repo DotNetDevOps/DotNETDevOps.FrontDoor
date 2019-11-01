@@ -351,6 +351,14 @@ namespace DotNETDevOps.FrontDoor.RouterApp
                 if (context.Request.Headers.ContainsKey("X-GET-BACKEND-ROUTE"))
                 {
                     context.Response.Headers.Add("X-BACKEND-ROUTE-STATUS-CODE", response.StatusCode.ToString());
+                    foreach(var h in response.RequestMessage.Headers)
+                    {
+                        try
+                        {
+                            context.Response.Headers.Add($"X-BACKEND-ROUTE-{h.Key}",string.Join("," , h.Value));
+                        }catch(Exception) { }
+                    }
+                  
                 }
 
                     if (context.Request.Headers.ContainsKey("X-GET-ROUTER-TIMINGS"))
