@@ -347,9 +347,13 @@ namespace DotNETDevOps.FrontDoor.RouterApp
                 // response.Headers.Remove("X-AppService-Proto");
                 var totalTime = sw.Elapsed;
                 var sendtime = totalTime - timeToBuildForward;
+                
+                if (context.Request.Headers.ContainsKey("X-GET-BACKEND-ROUTE"))
+                {
+                    context.Response.Headers.Add("X-BACKEND-ROUTE-STATUS-CODE", response.StatusCode.ToString());
+                }
 
-            
-                if (context.Request.Headers.ContainsKey("X-GET-ROUTER-TIMINGS"))
+                    if (context.Request.Headers.ContainsKey("X-GET-ROUTER-TIMINGS"))
                 {
                     response.Headers.Add("X-ROUTER-TIMINGS", $"{timeToBuildForward}/{sendtime}/{totalTime}");
 

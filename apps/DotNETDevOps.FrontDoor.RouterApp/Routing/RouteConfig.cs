@@ -226,8 +226,8 @@ namespace DotNETDevOps.FrontDoor.RouterApp
 
             if (context.Request.Headers.ContainsKey("X-GET-BACKEND-ROUTE"))
             {
-                context.Response.Headers.Add("X-BACKEND-ROUTE", proxyUrl);
-                
+                context.Response.Headers.Add("X-BACKEND-ROUTE-HOST", proxyUrl);
+                context.Response.Headers.Add("X-BACKEND-ROUTE-URI", forwarded.UpstreamRequest.RequestUri.ToString());
             }
 
             return forwarded;
