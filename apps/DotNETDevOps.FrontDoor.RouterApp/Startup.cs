@@ -44,35 +44,39 @@ namespace DotNETDevOps.FrontDoor.RouterApp
             var config = context.Features.Get<BaseRoute>();
             if (!string.IsNullOrEmpty(config.Cors))
             {
-                policyName = config.Cors.ToMD5Hash();
-                if (!Builders.ContainsKey(policyName))
+               
+               
+                var policy = await GetOrAddPolicy(config.Cors.ToMD5Hash(), config);
+              
+                if(policy.SupportsCredentials && policy.AllowAnyOrigin)
                 {
-                    var ex = new ExpressionParser<CorsPolicyBuilder>(Options.Create(new ExpressionParserOptions<CorsPolicyBuilder>
-                    {
-                        ThrowOnError = false,
-                        Document = new CorsPolicyBuilder()
-                    }), logger, new CorsFunctions());
-
-                     await ex.EvaluateAsync(config.Cors);
-                    return Builders[policyName] = ex.Document.Build();
+                    if(!policy.Origins.Contains(context.Request.Headers["Origin"]))
+                        policy.Origins.Add(context.Request.Headers["Origin"]);            
                 }
-                return Builders[policyName];
-
-
-                //    var config = sp.GetRequiredService<IRouteOptionsFactory>();
-                //    foreach(var cors in config.GetRoutes().SelectMany(v => v.Value).Where(k => !string.IsNullOrEmpty(k.Cors)))
-                //    {
-                //        ex.Document.ActiveBuilderName = cors.Cors.ToMD5Hash();
-                //        ex.EvaluateAsync(cors.Cors).GetAwaiter().GetResult();
-                //    }
-                //    services.AddCors(o =>
-                //    {
-                //        foreach (var c in ex.Document.Builders)
-                //            o.AddPolicy(c.Key, c.Value.Build());
-                //    });
+                return policy;
+                
             }
             return null;
 
+        }
+
+        private async Task<CorsPolicy> GetOrAddPolicy(string policyName, BaseRoute config)
+        {
+            if (!Builders.ContainsKey(policyName))
+            {
+                var ex = new ExpressionParser<CorsPolicyBuilder>(Options.Create(new ExpressionParserOptions<CorsPolicyBuilder>
+                {
+                    ThrowOnError = false,
+                    Document = new CorsPolicyBuilder()
+                }), logger, new CorsFunctions());
+
+                await ex.EvaluateAsync(config.Cors);
+
+                return Builders[policyName] = ex.Document.Build();
+            }
+
+            return Builders[policyName];
+             
         }
     }
 
@@ -286,6 +290,7 @@ namespace DotNETDevOps.FrontDoor.RouterApp
 
         private void ProxyRoute(IApplicationBuilder app)
         {
+            
             app.UseCors();
 
             app.Use(async (ctx, next) =>
@@ -370,12 +375,13 @@ namespace DotNETDevOps.FrontDoor.RouterApp
                   
                 }
 
-                    if (context.Request.Headers.ContainsKey("X-GET-ROUTER-TIMINGS"))
+                if (context.Request.Headers.ContainsKey("X-GET-ROUTER-TIMINGS"))
                 {
                     response.Headers.Add("X-ROUTER-TIMINGS", $"{timeToBuildForward}/{sendtime}/{totalTime}");
 
                 }
 
+                 
                
                 return response;
             }

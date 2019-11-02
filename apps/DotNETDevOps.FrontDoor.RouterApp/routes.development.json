@@ -92,9 +92,9 @@
           "proxy_pass": "https://localhost:44397/"
         },
         {
-          "route": "~* ^/(subscriptions/[^/]+/)?providers/(EarthML.AssetsManagement)",
+          "route": "~* ^/(subscriptions/[^/]+/)?providers/(EarthML.AssetsManagement|EarthML.Notifications)",
           "proxy_pass": "http://localhost:7423/",
-          "cors": "[CorsPolicyBuilder().AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader().WithExposedHeaders('Location')]"
+          "cors": "[CorsPolicyBuilder().AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader().AllowCredentials().WithExposedHeaders('Location')]"
         },
         {
           "route": "/smscph/",
