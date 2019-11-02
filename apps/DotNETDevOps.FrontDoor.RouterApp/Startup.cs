@@ -93,6 +93,8 @@ namespace DotNETDevOps.FrontDoor.RouterApp
                     return AllowAnyHeader;
                 case "WithExposedHeaders":
                     return WithExposedHeaders;
+                case nameof(AllowCredentials):
+                    return AllowCredentials;
                 default:
                     throw new NotImplementedException();
             }
@@ -105,6 +107,13 @@ namespace DotNETDevOps.FrontDoor.RouterApp
         public Task<JToken> AllowAnyOrigin(CorsPolicyBuilder document, JToken[] args)
         {
             document.AllowAnyOrigin();
+         
+            return Task.FromResult(args.First());
+        }
+        public Task<JToken> AllowCredentials(CorsPolicyBuilder document, JToken[] args)
+        {
+            document.AllowCredentials();
+
             return Task.FromResult(args.First());
         }
         public Task<JToken> AllowAnyMethod(CorsPolicyBuilder document, JToken[] args)
