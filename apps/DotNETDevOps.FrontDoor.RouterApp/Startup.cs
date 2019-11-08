@@ -27,117 +27,6 @@ using IHostingEnvironment = Microsoft.AspNetCore.Hosting.IHostingEnvironment;
 
 namespace DotNETDevOps.FrontDoor.RouterApp
 {
-   public class CorsBuilderContext : ICorsPolicyProvider
-    {
-        public CorsBuilderContext(ILogger<CorsBuilderContext> logger)
-        {
-            this.logger = logger;
-        }
-        public Dictionary<string, CorsPolicy> Builders = new Dictionary<string, CorsPolicy>();
-        private readonly ILogger<CorsBuilderContext> logger;
-
-        // public string ActiveBuilderName { get;set; }
-        // public CorsPolicyBuilder Active => Builders.ContainsKey(ActiveBuilderName) ? Builders[ActiveBuilderName] : Builders[ActiveBuilderName] = new CorsPolicyBuilder();
-
-        public async Task<CorsPolicy> GetPolicyAsync(HttpContext context, string policyName)
-        {
-            var config = context.Features.Get<BaseRoute>();
-            if (!string.IsNullOrEmpty(config.Cors))
-            {
-               
-               
-                var policy = await GetOrAddPolicy(config.Cors.ToMD5Hash(), config);
-              
-                if(policy.SupportsCredentials && policy.AllowAnyOrigin)
-                {
-                    if(!policy.Origins.Contains(context.Request.Headers["Origin"]))
-                        policy.Origins.Add(context.Request.Headers["Origin"]);            
-                }
-                return policy;
-                
-            }
-            return null;
-
-        }
-
-        private async Task<CorsPolicy> GetOrAddPolicy(string policyName, BaseRoute config)
-        {
-            if (!Builders.ContainsKey(policyName))
-            {
-                var ex = new ExpressionParser<CorsPolicyBuilder>(Options.Create(new ExpressionParserOptions<CorsPolicyBuilder>
-                {
-                    ThrowOnError = false,
-                    Document = new CorsPolicyBuilder()
-                }), logger, new CorsFunctions());
-
-                await ex.EvaluateAsync(config.Cors);
-
-                return Builders[policyName] = ex.Document.Build();
-            }
-
-            return Builders[policyName];
-             
-        }
-    }
-
-    public class CorsFunctions : IExpressionFunctionFactory<CorsPolicyBuilder>
-    {
-        public ExpressionParser<CorsPolicyBuilder>.ExpressionFunction Get(string name)
-        {
-            //CorsPolicyBuilder().AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()
-            switch (name)
-            {
-                case "CorsPolicyBuilder":
-                    return CorsPolicyBuilder;
-                case "AllowAnyOrigin":
-                    return AllowAnyOrigin;
-                case "AllowAnyMethod":
-                    return AllowAnyMethod;
-                case "AllowAnyHeader":
-                    return AllowAnyHeader;
-                case "WithExposedHeaders":
-                    return WithExposedHeaders;
-                case nameof(AllowCredentials):
-                    return AllowCredentials;
-                default:
-                    throw new NotImplementedException();
-            }
-        }
-        public Task<JToken> CorsPolicyBuilder(CorsPolicyBuilder document,JToken[] args)
-        {
-             
-            return Task.FromResult(JToken.FromObject(new { }));
-        }
-        public Task<JToken> AllowAnyOrigin(CorsPolicyBuilder document, JToken[] args)
-        {
-            document.AllowAnyOrigin();
-         
-            return Task.FromResult(args.First());
-        }
-        public Task<JToken> AllowCredentials(CorsPolicyBuilder document, JToken[] args)
-        {
-            document.AllowCredentials();
-
-            return Task.FromResult(args.First());
-        }
-        public Task<JToken> AllowAnyMethod(CorsPolicyBuilder document, JToken[] args)
-        {
-            document.AllowAnyMethod();
-            return Task.FromResult(args.First());
-        }
-        public Task<JToken> AllowAnyHeader(CorsPolicyBuilder document, JToken[] args)
-        {
-            document.AllowAnyHeader();
-          
-            return Task.FromResult(args.First());
-        }
-        public Task<JToken> WithExposedHeaders(CorsPolicyBuilder document, JToken[] args)
-        {
-            document.WithExposedHeaders(args.Skip(1).Select(c=>c.ToString()).ToArray());
-
-            return Task.FromResult(args.First());
-        }
-    }
     public class Startup
     {
         private readonly IHostingEnvironment hostingEnvironment;
@@ -318,7 +207,7 @@ namespace DotNETDevOps.FrontDoor.RouterApp
 
         private async Task<HttpResponseMessage> BuildProxy(HttpContext context)
         {
-            
+           
             var config = context.Features.Get<BaseRoute>();
             var sw = Stopwatch.StartNew();
             var forwarded = await config.ForwardAsync(context);
@@ -390,7 +279,7 @@ namespace DotNETDevOps.FrontDoor.RouterApp
         private bool MatchRoutes(HttpContext context)
         {
             var findMatch = context.RequestServices.GetRequiredService<RouteMatcher>().FindMatch(context);
-
+            
             if (findMatch != null)
             {
                 var ex = new ExpressionParser<ExpressionContext>(Options.Create(new ExpressionParserOptions<ExpressionContext>

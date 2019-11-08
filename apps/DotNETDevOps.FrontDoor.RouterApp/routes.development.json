@@ -92,6 +92,11 @@
           "proxy_pass": "https://localhost:44397/"
         },
         {
+          "route": "= /runtime/webhooks/EventGrid",
+          "rewrite": "^.*$ /runtime/webhooks/EventGrid",
+          "proxy_pass": "http://localhost:7333/"
+        },
+        {
           "route": "~* ^/(subscriptions/[^/]+/)?providers/(EarthML.AssetsManagement|EarthML.Notifications)",
           "proxy_pass": "http://localhost:7423/",
           "cors": "[CorsPolicyBuilder().AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader().AllowCredentials().WithExposedHeaders('Location')]"
@@ -115,14 +120,9 @@
         },
         {
           "route": "~* ^/(subscriptions/[^/]+/)?providers/(IO-Board.DataIngestor)",
-          "proxy_pass": "https://localhost:44386/",
+          "proxy_pass": "http://localhost:7071/",
           "cors": "[CorsPolicyBuilder().AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader().WithExposedHeaders('Location')]"
-        },
-        {
-          "route": "~* ^/(subscriptions/[^/]+/)?provider/(IO-Board.DataIngestor)",
-          "proxy_pass": "https://localhost:44386/",
-          "cors": "[CorsPolicyBuilder().AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader().WithExposedHeaders('Location')]"
-        },
+        },       
         {
           "route": "~* ^/(subscriptions/[^/]+/)?providers/(smscph.gateway)",
           "proxy_pass": "http://localhost:7071/"
