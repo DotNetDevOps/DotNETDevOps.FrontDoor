@@ -7,6 +7,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Primitives;
 using Microsoft.Identity.Client;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -160,6 +161,9 @@ namespace DotNETDevOps.FrontDoor.RouterApp
 
         [JsonProperty("proxy_set_header")]
         public Dictionary<string, string> ProxySetHeader { get; set; } = new Dictionary<string, string>();
+      
+        [JsonProperty("headers")]
+        public Dictionary<string, StringValues> Headers { get; set; } = new Dictionary<string, StringValues>();
 
         [JsonProperty("rewrite")]
         public string Rewrite { get; set; }

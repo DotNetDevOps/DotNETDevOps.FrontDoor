@@ -284,6 +284,7 @@ namespace DotNETDevOps.FrontDoor.RouterApp
         {
            
             var config = context.Features.Get<BaseRoute>();
+           
 
           
 
@@ -322,7 +323,7 @@ namespace DotNETDevOps.FrontDoor.RouterApp
                         var totalTime = sw.Elapsed;
                         var sendtime = totalTime - timeToBuildForward;
                         response.Headers.Add("X-ROUTER-TIMINGS", $"{timeToBuildForward}/{sendtime}/{totalTime}");
-                        return response;
+                        return AddHeaders(config, response);
                     }
                     forwarded = await config.ForwardAsync(context);
                 }
@@ -361,8 +362,17 @@ namespace DotNETDevOps.FrontDoor.RouterApp
 
                  
                
-                return response;
+                return AddHeaders(config, response);
             }
+        }
+
+        private HttpResponseMessage AddHeaders(BaseRoute config, HttpResponseMessage response)
+        {
+            foreach(var header in config.Headers)
+            {
+                response.Headers.Add(header.Key, header.Value.AsEnumerable());
+            }
+            return response;
         }
 
         private bool MatchRoutes(HttpContext context)

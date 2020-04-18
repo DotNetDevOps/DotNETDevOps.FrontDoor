@@ -32,6 +32,14 @@
         }
       ]
     },
+    "dotnetdevops-www": {
+      "servers": [
+        {
+          "host": "dotnetdevops-www.azurewebsites.net",
+          "weigth": 1
+        }
+      ]
+    },
     "sociallink-provider": {
       "servers": [
         {
@@ -139,7 +147,10 @@
         {
           "route": "/blog/",
           "index": [ "index.html" ],
-          "proxy_pass": "http://localhost:3000/blog/"
+          "proxy_pass": "http://localhost:3000/blog/",
+          "headers": {
+            "Cache-Tag": "ka-bg"
+          }
         },
         {
           "route": "~* ^/(subscriptions/[^/]+/)?providers/(Kjeldager.ContentEditor)",
@@ -225,7 +236,7 @@
       ]
     },
     {
-      "hostnames": [ "dotnetdevops.eu.ngrok.io" ],
+      "hostnames": [ "dotnetdevops.eu.ngrok.io", "localhost" ],
       "locations": [
         {
           "route": "= /forms/",
@@ -301,7 +312,7 @@
         },
         {
           "route": "~* ^/providers/(DotNetDevOps.AzureTemplates)",
-          "proxy_pass": "http://dotnetdevops-provider/"
+          "proxy_pass": "http://dotnetdevops-www/"
         },
         {
           "route": "= /frontdoor/",
