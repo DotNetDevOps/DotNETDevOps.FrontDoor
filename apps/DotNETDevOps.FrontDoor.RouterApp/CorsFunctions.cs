@@ -30,36 +30,36 @@ namespace DotNETDevOps.FrontDoor.RouterApp
                     throw new NotImplementedException();
             }
         }
-        public Task<JToken> CorsPolicyBuilder(CorsPolicyBuilder document,JToken[] args)
+        public Task<JToken> CorsPolicyBuilder(ExpressionParser<CorsPolicyBuilder> parser,CorsPolicyBuilder document,JToken[] args)
         {
              
             return Task.FromResult(JToken.FromObject(new { }));
         }
-        public Task<JToken> AllowAnyOrigin(CorsPolicyBuilder document, JToken[] args)
+        public Task<JToken> AllowAnyOrigin(ExpressionParser<CorsPolicyBuilder> parser,CorsPolicyBuilder document, JToken[] args)
         {
           //  document.AllowAnyOrigin();
             document.SetIsOriginAllowed((origin) => true);
          
             return Task.FromResult(args.First());
         }
-        public Task<JToken> AllowCredentials(CorsPolicyBuilder document, JToken[] args)
+        public Task<JToken> AllowCredentials(ExpressionParser<CorsPolicyBuilder> parser,CorsPolicyBuilder document, JToken[] args)
         {
             document.AllowCredentials();
 
             return Task.FromResult(args.First());
         }
-        public Task<JToken> AllowAnyMethod(CorsPolicyBuilder document, JToken[] args)
+        public Task<JToken> AllowAnyMethod(ExpressionParser<CorsPolicyBuilder> parser,CorsPolicyBuilder document, JToken[] args)
         {
             document.AllowAnyMethod();
             return Task.FromResult(args.First());
         }
-        public Task<JToken> AllowAnyHeader(CorsPolicyBuilder document, JToken[] args)
+        public Task<JToken> AllowAnyHeader(ExpressionParser<CorsPolicyBuilder> parser,CorsPolicyBuilder document, JToken[] args)
         {
             document.AllowAnyHeader();
           
             return Task.FromResult(args.First());
         }
-        public Task<JToken> WithExposedHeaders(CorsPolicyBuilder document, JToken[] args)
+        public Task<JToken> WithExposedHeaders(ExpressionParser<CorsPolicyBuilder> parser,CorsPolicyBuilder document, JToken[] args)
         {
             document.WithExposedHeaders(args.Skip(1).Select(c=>c.ToString()).ToArray());
 

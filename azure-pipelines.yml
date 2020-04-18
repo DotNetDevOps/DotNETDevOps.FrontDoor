@@ -258,3 +258,4 @@ stages:
                 package: '$(Pipeline.Workspace)/**/DotNETDevOps.FrontDoor.RouterFunction.zip'
                 enableCustomDeployment: true
                 DeploymentType: 'runFromZip'
+                appSettings: '-VaultBaseURL empty'
