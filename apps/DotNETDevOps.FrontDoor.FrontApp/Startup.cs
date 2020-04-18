@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -132,25 +132,25 @@ namespace DotNETDevOps.FrontDoor.FrontApp
 
                 app.UseDeveloperExceptionPage();
 
-                app.Use(async (ctx, next) =>
-                {
-                    if (ctx.WebSockets.IsWebSocketRequest)
-                    {
+                //app.Use(async (ctx, next) =>
+                //{
+                //    if (ctx.WebSockets.IsWebSocketRequest)
+                //    {
                         
-                        var host = new Uri("https://localhost:8080");
+                //        var host = new Uri("https://localhost:8080");
 
-                        await WebSocketHelpers.AcceptProxyWebSocketRequest(
-                            ctx, 
-                            new Uri((ctx.Request.IsHttps ? "wss://" : "ws://") + host.Host + (host.IsDefaultPort ? "" : ":" + host.Port) + ctx.Request.GetEncodedPathAndQuery()),
-                            option=>option.RemoteCertificateValidationCallback = IgnoreCert);
+                //        await WebSocketHelpers.AcceptProxyWebSocketRequest(
+                //            ctx, 
+                //            new Uri((ctx.Request.IsHttps ? "wss://" : "ws://") + host.Host + (host.IsDefaultPort ? "" : ":" + host.Port) + ctx.Request.GetEncodedPathAndQuery()),
+                //            option=>option.RemoteCertificateValidationCallback = IgnoreCert);
                        
-                    }
-                    else
-                    {
-                        await next();
-                    }
+                //    }
+                //    else
+                //    {
+                //        await next();
+                //    }
 
-                });
+                //});
                 app.RunProxy(h => h.ForwardTo("https://localhost:8080").Send());
             }
 

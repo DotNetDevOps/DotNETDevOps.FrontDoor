@@ -1,13 +1,5 @@
 {
   "upstreams": {
-    "io-board-cdn": {
-      "servers": [
-        {
-          "host": "ioboard.blob.core.windows.net",
-          "weigth": 1
-        }
-      ]
-    },
     "dotnetdevops-cdn": {
       "servers": [
         {
@@ -40,14 +32,6 @@
         }
       ]
     },
-    "io-board-forms-provider": {
-      "servers": [
-        {
-          "host": "io-board-forms-dev.azurewebsites.net",
-          "weigth": 1
-        }
-      ]
-    },
     "letsencrypt-provider": {
       "servers": [
         {
@@ -70,46 +54,6 @@
     }
   },
   "servers": [
-    {
-      "hostnames": [ "*.forms.io-board.com" ],
-      "locations": [
-        {
-          "route": "/",
-          "rewrite": "^.*$ /providers/io-board.forms/viewer",
-          "proxy_pass": "https://io-board-forms-provider/"
-        }
-      ]
-    },
-    {
-      "hostnames": [ "io-board.com" ],
-      "locations": [
-        {
-          "route": "= /forms/",
-          "rewrite": "^.*$ /index.html",
-          "proxy_pass": "[blobFindVersion('http://io-board-cdn/libs/','com.io-board.forms')]"
-        },
-        {
-          "route": "/forms/",
-          "index": [ "index.html" ],
-          "proxy_pass": "[blobFindVersion('http://io-board-cdn/libs/','com.io-board.forms')]"
-        }
-      ]
-    },
-    {
-      "hostnames": [ "api.io-board.com" ],
-      "locations": [
-        {
-          "route": "~* ^/providers/(io-board.forms)",
-          "proxy_pass": "https://io-board-forms-provider/",
-          "cors": "[CorsPolicyBuilder().AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()]"
-        },
-        {
-          "route": "~* ^/(subscriptions/[^/]+/)?providers/(IO-Board.DataIngestor)",
-          "proxy_pass": "https://io-board-data-ingestor-ioboard-dataingestor-serviceprovi-dev.azurewebsites.net/",
-          "cors": "[CorsPolicyBuilder().AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader().WithExposedHeaders('Location')]"
-        }
-      ]
-    },
     {
       "locations": [
         {

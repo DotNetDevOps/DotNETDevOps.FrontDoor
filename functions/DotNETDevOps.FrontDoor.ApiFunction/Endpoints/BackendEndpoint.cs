@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
+using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,7 +22,7 @@ namespace DotNETDevOps.FrontDoor.ApiFunction.Endpoints
 
         [HttpGet("backends")]
         public async Task<IActionResult> ListBackendAsync(
-          [FromServices] IDurableOrchestrationClient durableOrchestrationClient)
+          [FromServices] IDurableClient durableOrchestrationClient)
         { 
             return new OkResult();
         }

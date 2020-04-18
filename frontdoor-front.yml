@@ -27,6 +27,84 @@ pr:
     - frontdoor-front.yml
 
 stages:
+- stage: PublishFrontend
+  condition: ne(variables['Build.Reason'], 'PullRequest') 
+  jobs:
+  - job: Build
+    pool:
+      vmImage: 'windows-2019'
+
+
+    variables:
+      buildConfiguration: 'Release'
+      srcPath: 'apps/DotNETDevOps.FrontDoor.FrontApp'
+
+
+    steps:
+    - task: JsonPathExtractToVariableTask@1
+      displayName: 'Extracting $.name to libName'
+      inputs:
+        JsonFile: '$(srcPath)/package.json'
+        JsonPathFilter: '$.name'
+        VariableName: libName
+
+    - task: JsonPathExtractToVariableTask@1
+      displayName: 'Extracting $.version to libversion'
+      inputs:
+        JsonFile: '$(srcPath)/package.json' 
+        JsonPathFilter: '$.version' 
+        VariableName: libversion
+
+    - task: SemVerUtilityTask@1
+      displayName: 'Updating variable libversion'
+      inputs:
+        SemVer: '$(libversion)'
+        StripPrereleases: true
+        VariableName: libversion
+        FixHyphen: true 
+
+    - task: Npm@1
+      displayName: 'npm install'
+      inputs:
+        workingDir: '$(srcPath)'
+        verbose: false
+
+    - task: Npm@1
+      displayName: 'npm custom'
+      inputs:
+        command: custom
+        workingDir: '$(srcPath)'
+        verbose: false
+        customCommand: 'run build'
+
+    - task: VSTSBuildInfoTask@1
+      displayName: 'Creating Build Artifact'
+      inputs:
+        OutPutFileName: '$(Build.SourcesDirectory)/$(srcPath)/dist/buildinfo.json'
+        FeatureRegexPattern: '[^/]+(?=/$|$)'
+        FeatureVariableName: ciname
+    - task: CopyFiles@2
+      displayName: 'Copy Files to: $(build.artifactstagingdirectory)'
+      inputs:
+        SourceFolder: '$(srcPath)'
+        Contents: |
+         dist/**
+         package.json
+        TargetFolder: '$(build.artifactstagingdirectory)'
+
+    - task: AzureBlobFileCopy@1
+      displayName: 'Uploading to DotNETDevOps CDN'
+      inputs:
+        source: '$(srcPath)\dist\*'
+        ConnectedServiceName: 'Microsoft Partner Network(0fd7128b-5305-49da-a400-b7a37feb271c)'
+        storage: '/subscriptions/0fd7128b-5305-49da-a400-b7a37feb271c/resourceGroups/dotnetdevops/providers/Microsoft.Storage/storageAccounts/dotnetdevops'
+        container: libs
+        prefix: '$(libName)/$(libversion)-$(ciname)-$(Build.BuildNumber)/'
+
+
+
+
+
 - stage: BuildFrontend
   dependsOn: []
   jobs:
@@ -76,30 +154,3 @@ stages:
         workingDir: '$(srcPath)'
         verbose: false
         customCommand: 'run build'
-    - task: VSTSBuildInfoTask@1
-      displayName: 'Creating Build Artifact'
-      inputs:
-        OutPutFileName: '$(Build.SourcesDirectory)/$(srcPath)/dist/buildinfo.json'
-        FeatureRegexPattern: '[^/]+(?=/$|$)'
-        FeatureVariableName: ciname
-    - task: CopyFiles@2
-      displayName: 'Copy Files to: $(build.artifactstagingdirectory)'
-      inputs:
-        SourceFolder: '$(srcPath)'
-        Contents: |
-         dist/**
-         package.json
-        TargetFolder: '$(build.artifactstagingdirectory)'
-
-    - task: AzureBlobFileCopy@1
-      displayName: 'Uploading to DotNETDevOps CDN'
-      inputs:
-        source: '$(srcPath)\dist\*'
-        ConnectedServiceName: 'Microsoft Partner Network(0fd7128b-5305-49da-a400-b7a37feb271c)'
-        storage: '/subscriptions/0fd7128b-5305-49da-a400-b7a37feb271c/resourceGroups/dotnetdevops/providers/Microsoft.Storage/storageAccounts/dotnetdevops'
-        container: libs
-        prefix: '$(libName)/$(libversion)-$(ciname)-$(Build.BuildNumber)/'
-
-
-
-

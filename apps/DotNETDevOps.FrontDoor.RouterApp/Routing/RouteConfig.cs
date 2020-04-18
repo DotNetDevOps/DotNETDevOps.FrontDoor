@@ -7,6 +7,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Identity.Client;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using ProxyKit;
@@ -15,6 +16,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -80,12 +82,72 @@ namespace DotNETDevOps.FrontDoor.RouterApp
 
         }
     }
+    public class RouteAuthorization
+    {
+        [JsonProperty("clientid")]
+        public string ClientId { get; set; }
+
+        [JsonProperty("clientsecret")]
+        public string ClientSecret { get; set; }
+
+        [JsonProperty("scopes")]
+        public string[] Scopes { get; set; }
+
+       // private readonly Lazy<IConfidentialClientApplication> _app;
+        public RouteAuthorization()
+        {
+            //_app = new Lazy<IConfidentialClientApplication>(() =>
+            //{
+            //    var appBuilder = ConfidentialClientApplicationBuilder.Create(ClientId)
+            //   .WithTenantId("common")
+
+            //   .WithRedirectUri("https://io-board.eu.ngrok.io/.auth/login/aad/callback");
+            //    if (!string.IsNullOrEmpty(ClientSecret))
+            //        appBuilder.WithClientSecret(ClientSecret);
+
+
+
+            //    return appBuilder.Build();
+            //});
+        }
+
+      //  public IConfidentialClientApplication App => _app.Value;
+      public IConfidentialClientApplication BuildApp(string host, IMsalTokenCacheProvider msalTokenCacheProvider)
+        {
+            var appBuilder = ConfidentialClientApplicationBuilder.Create(ClientId)
+             .WithTenantId("common") 
+             .WithRedirectUri($"https://{host}/.auth/login/aad/callback");
+            if (!string.IsNullOrEmpty(ClientSecret))
+                appBuilder.WithClientSecret(ClientSecret);
+
+
+
+            var app= appBuilder.Build();
+            msalTokenCacheProvider?.Initialize(app.UserTokenCache);
+            return app;
+        }
+
+        public async Task<string> GetRedirectUrl(string host,string redirectUrl)
+        {
+
+            
+
+            var app = BuildApp(host,null); 
+            var location=await    app.GetAuthorizationRequestUrl(Scopes).WithExtraQueryParameters($"state={Base64Url.Encode(Encoding.ASCII.GetBytes($"redirectUrl={redirectUrl}&clientid={app.AppConfig.ClientId}"))}").ExecuteAsync();
+            return location.AbsoluteUri;
+            
+            
+        }
+    }
     [JsonConverter(typeof(RouteConfigConverter))]
     public abstract class BaseRoute : IExpressionFunctionFactory<ExpressionContext>
     {
         public abstract int Precedence { get; }
         public int RelativePrecedence { get; protected set; } = 0;
         public string Route { get; set; }
+
+        [JsonProperty("authorization")]
+        public RouteAuthorization Authoriztion { get; set; }
 
         [JsonProperty("proxy_pass")]
         public string ProxyPass { get; set; }
@@ -247,12 +309,12 @@ namespace DotNETDevOps.FrontDoor.RouterApp
             return null;
         }
 
-        private Task<JToken> concat(ExpressionContext document, JToken[] arguments)
+        private Task<JToken> concat(ExpressionParser<ExpressionContext> parser,ExpressionContext document, JToken[] arguments)
         {
             return Task.FromResult((JToken)string.Join("", arguments.Select(v=>v.ToString())));
         }
 
-        private static async Task<JToken> blobFindVersion(ExpressionContext context, JToken[] arguments)
+        private static async Task<JToken> blobFindVersion(ExpressionParser<ExpressionContext> parser, ExpressionContext context, JToken[] arguments)
         {
             var proxyUrl = arguments[0].ToString();
           

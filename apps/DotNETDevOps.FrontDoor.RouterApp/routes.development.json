@@ -16,6 +16,14 @@
         }
       ]
     },
+    "kjeldager-cdn": {
+      "servers": [
+        {
+          "host": "kjeldager.blob.core.windows.net",
+          "weigth": 1
+        }
+      ]
+    },
     "dotnetdevops-provider": {
       "servers": [
         {
@@ -82,19 +90,96 @@
       "hostnames": [ "io-board.eu.ngrok.io" ],
       "locations": [
         {
+          "route": "~* ^/(subscriptions/[^/]+/)?providers/(IasC.AgentlessTasks)",
+          "proxy_pass": "https://localhost:44321/",
+          "cors": "[CorsPolicyBuilder().AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader().AllowCredentials().WithExposedHeaders('Location')]"
+        },
+        {
+          "route": "~* ^/(subscriptions/[^/]+/)?providers/(kjeldager.phoner)",
+          "proxy_pass": "http://localhost:9442/",
+          "cors": "[CorsPolicyBuilder().AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader().AllowCredentials().WithExposedHeaders('Location')]"
+        },
+
+        {
+          "route": "~* ^/(subscriptions/[^/]+/)?provider/(IO-Board.Proxy)",
+          "proxy_pass": "https://localhost:44365/",
+          "cors": "[CorsPolicyBuilder().AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader().AllowCredentials().WithExposedHeaders('Location')]"
+        },
+        {
+          "route": "~* ^/(subscriptions/[^/]+/)?providers/(LeadDesk.CallStatus)",
+          "proxy_pass": "http://localhost:7002/",
+          "cors": "[CorsPolicyBuilder().AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader().AllowCredentials().WithExposedHeaders('Location')]"
+        },
+        {
+          "route": "~* ^/(subscriptions/[^/]+/)?providers/(Kjeldager.PowerPlatformProvider)",
+          "proxy_pass": "https://localhost:44313/",
+          "cors": "[CorsPolicyBuilder().AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader().AllowCredentials().WithExposedHeaders('Location')]"
+        },
+        {
           "route": "/identity/",
           "proxy_pass": "http://localhost:13000/"
           //  "cors": "[CorsPolicyBuilder().AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader().WithExposedHeaders('Location')]"
+        },
+        {
+          "route": "= /subscriptions",
+          "rewrite": "^.*$ /subscriptions",
+          "proxy_pass": "http://localhost:13000/",
+          "cors": "[CorsPolicyBuilder().AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader().WithExposedHeaders('Location')]"
         },
         {
           "route": "= /smscph/",
           "rewrite": "^.*$ /index.html",
           "proxy_pass": "https://localhost:44397/"
         },
+        //{
+        //  "route": "/blog/",
+        //  "index": [ "index.html" ],
+        //  "proxy_pass": "[blobFindVersion('https://kjeldager-cdn/libs/','com.kjeldager.content-editor')]"
+        //},
         {
+          "route": "/blog/",
+          "index": [ "index.html" ],
+          "proxy_pass": "http://localhost:3000/blog/"
+        },
+        {
+          "route": "~* ^/(subscriptions/[^/]+/)?providers/(Kjeldager.ContentEditor)",
+          "proxy_pass": "http://localhost:6453/",
+          "cors": "[CorsPolicyBuilder().AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader().AllowCredentials().WithExposedHeaders('Location')]",
+          "authorization": {
+            //  "redirectUrl": "https://io-board.eu.ngrok.io/blog/",
+            "clientId": "60a8bfb7-01e9-4956-b2cc-23c251250d8a",
+            "scopes": [ "api://92625908-aca3-45a5-8fc8-8913b31bb1fa/.default" ]
+            //   "additionalLoginParams": [ "response_type=code id_token", "resource=<app_id>", "domain_hint=<domain_name>" ]
+          }
+        },
+        {
+          "route": "/iasc/",
+          "proxy_pass": "https://localhost:44334/"
+        },
+        {
+          "route": "/corona/",
+          "proxy_pass": "http://localhost:3000/"
+        },
+        {
+          "route": "/banking/",
+          "proxy_pass": "http://localhost:7384/"
+        },
+        {
+          "route": "~* ^/(subscriptions/[^/]+/)?providers/(Kjeldager.PowerPlatform|DotNetDevOps.PowerPlatformProvider)",
+          "proxy_pass": "http://localhost:7484/",
+          "cors": "[CorsPolicyBuilder().AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader().WithExposedHeaders('Location')]"
+        },
+
+        {
+
           "route": "= /runtime/webhooks/EventGrid",
           "rewrite": "^.*$ /runtime/webhooks/EventGrid",
           "proxy_pass": "http://localhost:7333/"
+        },
+        {
+          "route": "= /delegate/Kombit/IoT",
+          "rewrite": "^.*$ /runtime/webhooks/EventGrid",
+          "proxy_pass": "http://localhost:7071/"
         },
         {
           "route": "~* ^/(subscriptions/[^/]+/)?providers/(EarthML.AssetsManagement|EarthML.Notifications)",
@@ -122,7 +207,7 @@
           "route": "~* ^/(subscriptions/[^/]+/)?providers/(IO-Board.DataIngestor)",
           "proxy_pass": "http://localhost:7071/",
           "cors": "[CorsPolicyBuilder().AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader().WithExposedHeaders('Location')]"
-        },       
+        },
         {
           "route": "~* ^/(subscriptions/[^/]+/)?providers/(smscph.gateway)",
           "proxy_pass": "http://localhost:7071/"
@@ -140,7 +225,7 @@
       ]
     },
     {
-      "hostnames": [ "dotnetdevops.eu.ngrok.io", "localhost" ],
+      "hostnames": [ "dotnetdevops.eu.ngrok.io" ],
       "locations": [
         {
           "route": "= /forms/",

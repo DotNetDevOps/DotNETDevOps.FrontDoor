@@ -1,18 +1,23 @@
-﻿using DotNETDevOps.FrontDoor.AspNetCore;
+﻿using Azure.Core;
+using Azure.Security.KeyVault.Secrets;
+using DotNETDevOps.FrontDoor.AspNetCore;
 using DotNETDevOps.FrontDoor.RouterApp.Azure.Blob;
 using DotNETDevOps.JsonFunctions;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Identity.Client;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using ProxyKit;
@@ -21,12 +26,49 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
+using System.Security.Claims;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
+using System.Web;
 using IHostingEnvironment = Microsoft.AspNetCore.Hosting.IHostingEnvironment;
 
 namespace DotNETDevOps.FrontDoor.RouterApp
 {
+    public class VaultTokenCredential : TokenCredential
+    {
+        public override AccessToken GetToken(TokenRequestContext requestContext, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override async ValueTask<AccessToken> GetTokenAsync(TokenRequestContext requestContext, CancellationToken cancellationToken)
+        {
+            var app = new Microsoft.Azure.Services.AppAuthentication.AzureServiceTokenProvider();
+            var token = await app.GetAuthenticationResultAsync("https://vault.azure.net");
+            return new AccessToken(token.AccessToken, token.ExpiresOn);
+
+        }
+    }
+    public class KeyVaultProvider 
+    {
+        private readonly VaultTokenCredential tokenCredential;
+        private readonly IConfiguration configuration;
+
+        public KeyVaultProvider(VaultTokenCredential tokenCredential , IConfiguration configuration)
+        {
+            this.tokenCredential = tokenCredential;
+            this.configuration = configuration;
+        }
+        public async Task<string> GetValueAsync(string name)
+        {
+
+
+            var client = new SecretClient(new Uri(configuration.GetValue<string>("VaultBaseURL")), tokenCredential);
+            var secret = await client.GetSecretAsync(name);
+            return secret.Value.Value;
+        }
+    }
     public class Startup
     {
         private readonly IHostingEnvironment hostingEnvironment;
@@ -39,7 +81,15 @@ namespace DotNETDevOps.FrontDoor.RouterApp
         }
         public void ConfigureServices(IServiceCollection services)
         {
+            //  services.AddTokenManagement();
+            services.AddSingleton<KeyVaultProvider>();
+            services.AddSingleton<VaultTokenCredential>();
+
             //services.WithXForwardedHeaders();
+            services.AddDataProtection(o=>
+            {
+                
+            });
 
             services.AddProxy();
             services.AddHttpClient("heathcheck");
@@ -49,7 +99,7 @@ namespace DotNETDevOps.FrontDoor.RouterApp
             services.AddSingleton<CDNHelperFactory>();
 
 
-
+            
             if (!string.IsNullOrEmpty(configuration.GetValue<string>("RemoteConfiguration")))
             {
                 services.AddSingleton<IRouteOptionsFactory,RemoteRouteOptionsFactory>();
@@ -96,6 +146,22 @@ namespace DotNETDevOps.FrontDoor.RouterApp
             services.AddSingleton<ICorsPolicyProvider, CorsBuilderContext>();
 
 
+            services.Add(ServiceDescriptor.Singleton<IDistributedCache, AzureTableStorageCacheHandler>(a =>
+                new AzureTableStorageCacheHandler(a.GetRequiredService<IConfiguration>().GetValue<string>("AzureWebJobsStorage"), "msal", "kaapi")));
+            services.AddSingleton<IMsalTokenCacheProvider, MsalDistributedTokenCacheAdapter>();
+
+            services.AddAuthentication().AddCookie("ProxyAuth", o =>
+            {
+                o.Cookie.Name = ".auth-proxy";
+                o.Cookie.SameSite = SameSiteMode.Strict;
+                o.Cookie.Path = "/";
+              //  o.Cookie.Domain = "io-board.eu.ngrok.io";
+                o.SlidingExpiration = true;
+                o.ExpireTimeSpan= TimeSpan.FromDays(30);
+                
+                
+            });
+          //  services.AddScoped<DataPlatformConfidentialClientFactory>();
         }
 
 
@@ -123,6 +189,8 @@ namespace DotNETDevOps.FrontDoor.RouterApp
             app.Map("/.well-known/config.json", b => b.Run(async (r) => {
                 await r.Response.WriteAsync(JsonConvert.SerializeObject(r.RequestServices.GetRequiredService<IRouteOptionsFactory>().GetRoutes()));
             }));
+
+            app.Map("/.auth", app => app.UseMiddleware<ProxyAuthMiddleware>());
 
             //app.Use(async (ctx, next) =>
             //{
@@ -160,6 +228,8 @@ namespace DotNETDevOps.FrontDoor.RouterApp
 
         }
 
+     
+
         private Task Writer(HttpContext httpContext, HealthReport result)
         {
             httpContext.Response.ContentType = "application/json";
@@ -182,22 +252,27 @@ namespace DotNETDevOps.FrontDoor.RouterApp
             
             app.UseCors();
 
-            app.Use(async (ctx, next) =>
-            {
-                if (ctx.WebSockets.IsWebSocketRequest)
-                {
-                    var config = ctx.Features.Get<BaseRoute>();
-                    var host = new Uri(config.ProxyPass);
+            app.UseMiddleware<ProxyAuthTokenMiddleware>();
 
-                    await WebSocketHelpers.AcceptProxyWebSocketRequest(ctx, new Uri((ctx.Request.IsHttps ? "wss://" : "ws://") + host.Host + (host.IsDefaultPort ? "" : ":" + host.Port) + ctx.Request.GetEncodedPathAndQuery()));
+            //app.Use(async (ctx, next) =>
+            //{
+            //    var config = ctx.Features.Get<BaseRoute>();
+                
 
-                }
-                else
-                {
-                    await next();
-                }
+            //    if (ctx.WebSockets.IsWebSocketRequest)
+            //    {
+                   
+            //        var host = new Uri(config.ProxyPass);
 
-            });
+            //        await WebSocketHelpers.AcceptProxyWebSocketRequest(ctx, new Uri((ctx.Request.IsHttps ? "wss://" : "ws://") + host.Host + (host.IsDefaultPort ? "" : ":" + host.Port) + ctx.Request.GetEncodedPathAndQuery()));
+
+            //    }
+            //    else
+            //    {
+            //        await next();
+            //    }
+
+            //});
             
            
 
@@ -209,8 +284,19 @@ namespace DotNETDevOps.FrontDoor.RouterApp
         {
            
             var config = context.Features.Get<BaseRoute>();
+
+          
+
             var sw = Stopwatch.StartNew();
             var forwarded = await config.ForwardAsync(context);
+
+            if (config.Authoriztion != null && !string.IsNullOrEmpty(context.Items["forwardtoken"] as string))
+            {
+                forwarded.UpstreamRequest.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", context.Items["forwardtoken"] as string);
+                
+            }
+
+
             var timeToBuildForward = sw.Elapsed;
 
             //Handle indexes 
@@ -223,6 +309,7 @@ namespace DotNETDevOps.FrontDoor.RouterApp
                     var index = queue.Dequeue();
                     UriBuilder builder = new UriBuilder(originalUri);
                     builder.Path += index;
+
                     forwarded.UpstreamRequest.RequestUri = builder.Uri;
 
                     var response = await forwarded
@@ -237,9 +324,11 @@ namespace DotNETDevOps.FrontDoor.RouterApp
                         response.Headers.Add("X-ROUTER-TIMINGS", $"{timeToBuildForward}/{sendtime}/{totalTime}");
                         return response;
                     }
+                    forwarded = await config.ForwardAsync(context);
                 }
             }
 
+          //  forwarded = await config.ForwardAsync(context);
             {
 
                 var response = await forwarded
@@ -290,6 +379,9 @@ namespace DotNETDevOps.FrontDoor.RouterApp
 
                 context.Features.Set(ex);
                 context.Features.Set(findMatch);
+
+
+
                 return true;
             }
 

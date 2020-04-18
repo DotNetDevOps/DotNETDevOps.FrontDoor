@@ -9,6 +9,7 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Azure.WebJobs.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using System;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -43,7 +44,7 @@ namespace DotNETDevOps.FrontDoor.RouterFunction
             //               .CreateLogger()));
         }
 
-        public void ConfigureWebHostBuilder(ExecutionContext executionContext, WebHostBuilder builder)
+        public void ConfigureWebHostBuilder(ExecutionContext executionContext, IWebHostBuilder builder, IServiceProvider serviceProvider)
         {
             builder.ConfigureAppConfiguration(ConfigureAppConfiguration);
             builder.ConfigureLogging(Logging);

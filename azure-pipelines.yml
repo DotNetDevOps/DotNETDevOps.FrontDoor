@@ -221,7 +221,7 @@ stages:
                 package: '$(Pipeline.Workspace)/**/DotNETDevOps.FrontDoor.ApiFunction.zip'
                 enableCustomDeployment: true
                 DeploymentType: 'runFromZip'
-                appSettings: '-DurableTaskHubName FrontDoorApiHub'
+                appSettings: '-DurableTaskHubName FrontDoorApiHub -FUNCTIONS_EXTENSION_VERSION ~3'
   - deployment: DeployFrontFunction
     pool:
       vmImage: 'windows-2019'
@@ -240,6 +240,7 @@ stages:
                 package: '$(Pipeline.Workspace)/**/DotNETDevOps.FrontDoor.FrontFunction.zip'
                 enableCustomDeployment: true
                 DeploymentType: 'runFromZip'
+                appSettings: '-FUNCTIONS_EXTENSION_VERSION ~3'
   - deployment: DeployRouterFunction
     pool:
       vmImage: 'windows-2019'
@@ -258,3 +259,4 @@ stages:
                 package: '$(Pipeline.Workspace)/**/DotNETDevOps.FrontDoor.RouterFunction.zip'
                 enableCustomDeployment: true
                 DeploymentType: 'runFromZip'
+                appSettings: '-VaultBaseURL empty -FUNCTIONS_EXTENSION_VERSION ~3'

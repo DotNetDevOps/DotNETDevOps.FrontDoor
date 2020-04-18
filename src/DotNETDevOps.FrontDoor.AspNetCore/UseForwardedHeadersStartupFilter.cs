@@ -1,7 +1,8 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿
+
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpOverrides;
-using Microsoft.AspNetCore.HttpOverrides.Internal;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
 using System;
@@ -10,15 +11,17 @@ using System.Net;
 
 namespace DotNETDevOps.FrontDoor.AspNetCore
 {
+
     public class UseForwardedHeadersStartupFilter : IStartupFilter
     {
         private const string XForwardedPathBase = "X-Forwarded-PathBase";
-       
+
         private readonly ILogger logger;
 
         public UseForwardedHeadersStartupFilter(ILogger<UseForwardedHeadersStartupFilter> logger)
         {
-            
+
+
             this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
@@ -31,16 +34,22 @@ namespace DotNETDevOps.FrontDoor.AspNetCore
                     ForwardedHeaders = ForwardedHeaders.XForwardedHost | ForwardedHeaders.XForwardedProto,
 
                 };
-                 
+
                 builder.UseForwardedHeaders(options);
 
                 builder.Use(async (context, next) =>
                 {
-                    
+
 
                     if (context.Request.Headers.TryGetValue("X-Forwarded-For", out StringValues XForwardedFor))
                     {
-                        var parsed = IPEndPointParser.TryParse(XForwardedFor.SelectMany(k => k.Split(',')).First(), out IPEndPoint remoteIP);
+#if NETCOREAPP3_1
+                        var parsed = IPEndPoint.TryParse(XForwardedFor.SelectMany(k => k.Split(',')).First(), out IPEndPoint remoteIP);
+#else
+                       
+                         var parsed = Microsoft.AspNetCore.HttpOverrides.Internal.IPEndPointParser.TryParse(XForwardedFor.SelectMany(k => k.Split(',')).First(), out IPEndPoint remoteIP);
+#endif
+                        //   
                         if (parsed)
                         {
                             context.Connection.RemoteIpAddress = remoteIP.Address;
