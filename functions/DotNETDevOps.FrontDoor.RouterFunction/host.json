@@ -6,12 +6,18 @@
     }
   },
   "logging": {
+    "applicationInsights": {
+      "samplingSettings": {
+        "isEnabled": true,
+        "maxTelemetryItemsPerSecond": 1
+      }
+    },
     "fileLoggingMode": "always",
     "logLevel": {
       "default": "Warning",
-      "Host.Result": "Error",
+      "Host.Result": "Information",
       "Function": "Warning",
-      "Host.Aggreator": "Information"
+      "Host.Aggreator": "Trace"
     }
   }
 }
