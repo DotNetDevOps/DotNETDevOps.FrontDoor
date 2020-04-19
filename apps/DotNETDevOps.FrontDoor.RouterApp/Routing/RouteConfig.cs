@@ -85,11 +85,8 @@ namespace DotNETDevOps.FrontDoor.RouterApp
     }
     public class RouteAuthorization
     {
-        [JsonProperty("clientid")]
-        public string ClientId { get; set; }
-
-        [JsonProperty("clientsecret")]
-        public string ClientSecret { get; set; }
+        //[JsonProperty("clientid")]
+        //public string ClientId { get; set; }
 
         [JsonProperty("scopes")]
         public string[] Scopes { get; set; }
@@ -113,28 +110,28 @@ namespace DotNETDevOps.FrontDoor.RouterApp
         }
 
       //  public IConfidentialClientApplication App => _app.Value;
-      public IConfidentialClientApplication BuildApp(string host, IMsalTokenCacheProvider msalTokenCacheProvider)
+      public static async Task<IConfidentialClientApplication> BuildAppAsync(string host,string clientId, IMsalTokenCacheProvider msalTokenCacheProvider, KeyVaultProvider keyVaultProvider)
         {
-            var appBuilder = ConfidentialClientApplicationBuilder.Create(ClientId)
+            var appBuilder = ConfidentialClientApplicationBuilder.Create(clientId)
              .WithTenantId("common") 
              .WithRedirectUri($"https://{host}/.auth/login/aad/callback");
-            if (!string.IsNullOrEmpty(ClientSecret))
-                appBuilder.WithClientSecret(ClientSecret);
 
-
+            if(keyVaultProvider!=null)
+                appBuilder.WithClientSecret(await keyVaultProvider.GetValueAsync(clientId));
+             
 
             var app= appBuilder.Build();
             msalTokenCacheProvider?.Initialize(app.UserTokenCache);
             return app;
         }
 
-        public async Task<string> GetRedirectUrl(string host,string redirectUrl)
+        public static async Task<string> GetRedirectUrl(string host,string clientid, string redirectUrl,string[] scopes)
         {
 
             
 
-            var app = BuildApp(host,null); 
-            var location=await    app.GetAuthorizationRequestUrl(Scopes).WithExtraQueryParameters($"state={Base64Url.Encode(Encoding.ASCII.GetBytes($"redirectUrl={redirectUrl}&clientid={app.AppConfig.ClientId}"))}").ExecuteAsync();
+            var app = await BuildAppAsync(host,clientid,null,null); 
+            var location=await    app.GetAuthorizationRequestUrl(scopes).WithExtraQueryParameters($"state={Base64Url.Encode(Encoding.ASCII.GetBytes($"redirectUrl={redirectUrl}&clientid={app.AppConfig.ClientId}"))}").ExecuteAsync();
             return location.AbsoluteUri;
             
             

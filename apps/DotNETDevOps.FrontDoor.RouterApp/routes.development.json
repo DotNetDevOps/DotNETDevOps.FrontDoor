@@ -158,7 +158,7 @@
           "cors": "[CorsPolicyBuilder().AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader().AllowCredentials().WithExposedHeaders('Location')]",
           "authorization": {
             //  "redirectUrl": "https://io-board.eu.ngrok.io/blog/",
-            "clientId": "60a8bfb7-01e9-4956-b2cc-23c251250d8a",
+          //  "clientId": "60a8bfb7-01e9-4956-b2cc-23c251250d8a",
             "scopes": [ "api://92625908-aca3-45a5-8fc8-8913b31bb1fa/.default" ]
             //   "additionalLoginParams": [ "response_type=code id_token", "resource=<app_id>", "domain_hint=<domain_name>" ]
           }

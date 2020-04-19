@@ -4,6 +4,7 @@ using DotNETDevOps.FrontDoor.AspNetCore;
 using DotNETDevOps.FrontDoor.RouterApp.Azure.Blob;
 using DotNETDevOps.JsonFunctions;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
@@ -13,6 +14,7 @@ using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -81,11 +83,11 @@ namespace DotNETDevOps.FrontDoor.RouterApp
         }
         public void ConfigureServices(IServiceCollection services)
         {
-            //  services.AddTokenManagement();
+            
             services.AddSingleton<KeyVaultProvider>();
             services.AddSingleton<VaultTokenCredential>();
 
-            //services.WithXForwardedHeaders();
+    
             services.AddDataProtection(o=>
             {
                 
@@ -147,20 +149,25 @@ namespace DotNETDevOps.FrontDoor.RouterApp
 
 
             services.Add(ServiceDescriptor.Singleton<IDistributedCache, AzureTableStorageCacheHandler>(a =>
-                new AzureTableStorageCacheHandler(a.GetRequiredService<IConfiguration>().GetValue<string>("AzureWebJobsStorage"), "msal", "kaapi")));
+                new AzureTableStorageCacheHandler(a.GetRequiredService<IConfiguration>().GetValue<string>("AzureWebJobsStorage"), "msal", $"kaapi-{a.GetRequiredService<IHostEnvironment>().EnvironmentName}".ToLower())));
             services.AddSingleton<IMsalTokenCacheProvider, MsalDistributedTokenCacheAdapter>();
 
-            services.AddAuthentication().AddCookie("ProxyAuth", o =>
-            {
-                o.Cookie.Name = ".auth-proxy";
-                o.Cookie.SameSite = SameSiteMode.Strict;
-                o.Cookie.Path = "/";
-              //  o.Cookie.Domain = "io-board.eu.ngrok.io";
-                o.SlidingExpiration = true;
-                o.ExpireTimeSpan= TimeSpan.FromDays(30);
-                
-                
-            });
+            services.TryAddEnumerable(ServiceDescriptor.Singleton<IPostConfigureOptions<CookieAuthenticationOptions>, PostConfigureCookieAuthenticationOptions>());
+            services.AddSingleton<DynamicCookieScheme>();
+            services.AddAuthentication();
+        //    services.AddTransient<CookieAuthenticationHandler>();
+            //    .AddCookie(ProxyAuthMiddleware.AuthenticationSchema, o =>
+            //{
+            //    o.Cookie.Name = ".auth-proxy";
+            //    o.Cookie.SameSite = SameSiteMode.Strict;
+            //    o.Cookie.Path = "/";
+            //    //  o.Cookie.Domain = "io-board.eu.ngrok.io";
+            //    o.SlidingExpiration = true;
+            //    o.ExpireTimeSpan = TimeSpan.FromDays(30);
+
+
+            //})
+                ;
           //  services.AddScoped<DataPlatformConfidentialClientFactory>();
         }
 

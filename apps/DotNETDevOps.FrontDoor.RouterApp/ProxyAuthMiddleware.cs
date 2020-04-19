@@ -60,12 +60,14 @@ namespace DotNETDevOps.FrontDoor.RouterApp
         private readonly RequestDelegate _next;
         private readonly KeyVaultProvider keyVaultProvider;
         private readonly IMsalTokenCacheProvider msalTokenCacheProvider;
+        private readonly DynamicCookieScheme dynamicCookieScheme;
 
-        public ProxyAuthTokenMiddleware(RequestDelegate next, KeyVaultProvider keyVaultProvider, IMsalTokenCacheProvider msalTokenCacheProvider)
+        public ProxyAuthTokenMiddleware(RequestDelegate next, KeyVaultProvider keyVaultProvider, IMsalTokenCacheProvider msalTokenCacheProvider, DynamicCookieScheme dynamicCookieScheme)
         {
             _next = next;
             this.keyVaultProvider = keyVaultProvider;
             this.msalTokenCacheProvider = msalTokenCacheProvider;
+            this.dynamicCookieScheme = dynamicCookieScheme;
         }
 
         public async Task InvokeAsync(HttpContext ctx)
@@ -73,9 +75,11 @@ namespace DotNETDevOps.FrontDoor.RouterApp
             var config = ctx.Features.Get<BaseRoute>();
             if (config.Authoriztion != null && !ctx.Request.Headers.ContainsKey("Authorization"))
             {
-                AuthenticationResult result = null;
+                var schema = await dynamicCookieScheme.EnsureAddedAsync(ctx.Request.Headers["X-ClientId"]);
 
-                var auth = await ctx.AuthenticateAsync("ProxyAuth");
+                AuthenticationResult result = null;
+                
+                var auth = await ctx.AuthenticateAsync(schema);
                 if (!auth.Succeeded)
                 {
                     ctx.Response.StatusCode = 401;
@@ -83,7 +87,12 @@ namespace DotNETDevOps.FrontDoor.RouterApp
                 }
                 ;
 
-                var app = config.Authoriztion.BuildApp(new Uri(ctx.Request.GetDisplayUrl()).Host,msalTokenCacheProvider);
+                var app = await RouteAuthorization.BuildAppAsync(
+                    new Uri(ctx.Request.GetDisplayUrl()).Host,
+                    auth.Principal.FindFirstValue("clientid"), 
+                    msalTokenCacheProvider,
+                    keyVaultProvider
+                    );
 
 
 
@@ -98,6 +107,7 @@ namespace DotNETDevOps.FrontDoor.RouterApp
                     result = await app.AcquireTokenSilent(config.Authoriztion.Scopes, account)
                            .ExecuteAsync();
                     ctx.Items["forwardtoken"] = result.AccessToken;
+                   
 
                 }
                 catch (MsalUiRequiredException ex)
@@ -109,8 +119,9 @@ namespace DotNETDevOps.FrontDoor.RouterApp
                 }
                 catch (Exception ex)
                 {
-
-                    // await ctx.SignOutAsync("ProxyAuth");
+                  //  var accountClean = await app.GetAccountAsync(account.HomeAccountId.Identifier);
+                    await app.RemoveAsync(account);
+                    await ctx.SignOutAsync(schema);
                     ctx.Response.StatusCode = 401;
 
                     return;
@@ -127,16 +138,18 @@ namespace DotNETDevOps.FrontDoor.RouterApp
     }
     public class ProxyAuthMiddleware
     {
-        const string AuthenticationSchema = "ProxyAuth";
+      //  public const string AuthenticationSchema = "ProxyAuth";
         private readonly RequestDelegate _next;
         private readonly KeyVaultProvider keyVaultProvider;
         private readonly IMsalTokenCacheProvider msalTokenCacheProvider;
+        private readonly DynamicCookieScheme dynamicCookieScheme;
 
-        public ProxyAuthMiddleware(RequestDelegate next, KeyVaultProvider keyVaultProvider, IMsalTokenCacheProvider msalTokenCacheProvider)
+        public ProxyAuthMiddleware(RequestDelegate next, KeyVaultProvider keyVaultProvider, IMsalTokenCacheProvider msalTokenCacheProvider, DynamicCookieScheme dynamicCookieScheme)
         {
             _next = next;
             this.keyVaultProvider = keyVaultProvider;
             this.msalTokenCacheProvider = msalTokenCacheProvider;
+            this.dynamicCookieScheme = dynamicCookieScheme;
         }
 
         public async Task InvokeAsync(HttpContext ctx)
@@ -144,21 +157,23 @@ namespace DotNETDevOps.FrontDoor.RouterApp
             if (ctx.Request.Path.Value.EndsWith("callback"))
             {
                 var data = HttpUtility.ParseQueryString(Encoding.ASCII.GetString(Base64Url.Decode(ctx.Request.Query["state"].FirstOrDefault())));
-                var secret = await keyVaultProvider.GetValueAsync(data["clientid"]);
+                var schema = await dynamicCookieScheme.EnsureAddedAsync(data["clientid"]);
+              //  var secret = await keyVaultProvider.GetValueAsync(data["clientid"]);
+ 
+                var app = await RouteAuthorization.BuildAppAsync(new Uri(ctx.Request.GetDisplayUrl()).Host, data["clientid"],  msalTokenCacheProvider, keyVaultProvider);
 
-                var auth = new RouteAuthorization()
-                {
-                    ClientId = data["clientid"],
-                    ClientSecret = secret,
-                };
-                var app = auth.BuildApp(new Uri(ctx.Request.GetDisplayUrl()).Host,msalTokenCacheProvider);
-                 
                 var token = await app.AcquireTokenByAuthorizationCode(new string[] { "profile" }, ctx.Request.Query["code"].FirstOrDefault()).ExecuteAsync();
 
-                await ctx.SignInAsync(AuthenticationSchema, new ClaimsPrincipal(
+                await ctx.SignInAsync(schema, new ClaimsPrincipal(
                     new ClaimsIdentity(new Claim[]{
-                            new Claim("sub",$"{token.Account.HomeAccountId.ObjectId}.{token.Account.HomeAccountId.TenantId}")
-                        }, AuthenticationSchema)), new AuthenticationProperties { IsPersistent = true, AllowRefresh = true, ExpiresUtc = DateTimeOffset.UtcNow.AddDays(14) });
+                            new Claim("sub",$"{token.Account.HomeAccountId.ObjectId}.{token.Account.HomeAccountId.TenantId}"),
+                            new Claim("clientid",data["clientid"])
+                        }, schema)),
+                        new AuthenticationProperties {
+                            IsPersistent = true, 
+                            AllowRefresh = true,
+                            ExpiresUtc = DateTimeOffset.UtcNow.AddDays(14)
+                        });
 
                 ctx.Response.Redirect(data["redirectUrl"]);
                 
@@ -168,17 +183,14 @@ namespace DotNETDevOps.FrontDoor.RouterApp
             else
             {
 
-                var auth = new RouteAuthorization()
-                {
-                    ClientId = ctx.Request.Query["clientid"].FirstOrDefault(),
-                };
 
-                var aut = await ctx.AuthenticateAsync(AuthenticationSchema);
+                var schema = await dynamicCookieScheme.EnsureAddedAsync(ctx.Request.Query["clientid"].FirstOrDefault());
+                var aut = await ctx.AuthenticateAsync(schema);
                 if (aut.Succeeded)
                 {
                     try
                     {
-                        var app = auth.BuildApp(new Uri(ctx.Request.GetDisplayUrl()).Host,msalTokenCacheProvider);
+                        var app = await RouteAuthorization.BuildAppAsync(new Uri(ctx.Request.GetDisplayUrl()).Host, aut.Principal.FindFirstValue("clientid"), msalTokenCacheProvider,keyVaultProvider);
 
                         var account = MsalAccount.FromMsalAccountId(aut.Principal.FindFirstValue("sub"));
 
@@ -200,7 +212,10 @@ namespace DotNETDevOps.FrontDoor.RouterApp
 
 
 
-                ctx.Response.Redirect(await auth.GetRedirectUrl(new Uri(ctx.Request.GetDisplayUrl()).Host,ctx.Request.Query["redirectUri"].FirstOrDefault()));
+                ctx.Response.Redirect(await RouteAuthorization.GetRedirectUrl(
+                    new Uri(ctx.Request.GetDisplayUrl()).Host,
+                    ctx.Request.Query["clientid"].FirstOrDefault(),
+                    ctx.Request.Query["redirectUri"].FirstOrDefault(),null));
                
             }
 
