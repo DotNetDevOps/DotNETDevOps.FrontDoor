@@ -2,8 +2,10 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.Identity.Client;
+using ProxyKit;
 using System;
 using System.Linq;
+using System.Net.Http;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
@@ -75,7 +77,7 @@ namespace DotNETDevOps.FrontDoor.RouterApp
             var config = ctx.Features.Get<BaseRoute>();
             if (config.Authoriztion != null && !ctx.Request.Headers.ContainsKey("Authorization"))
             {
-                var schema = await dynamicCookieScheme.EnsureAddedAsync(ctx.Request.Headers["X-ClientId"]);
+                var schema = ProxyAuthMiddleware.AuthenticationSchema;
 
                 AuthenticationResult result = null;
                 
@@ -142,22 +144,86 @@ namespace DotNETDevOps.FrontDoor.RouterApp
         private readonly RequestDelegate _next;
         private readonly KeyVaultProvider keyVaultProvider;
         private readonly IMsalTokenCacheProvider msalTokenCacheProvider;
-        private readonly DynamicCookieScheme dynamicCookieScheme;
+        private readonly IHttpClientFactory httpClientFactory;
 
-        public ProxyAuthMiddleware(RequestDelegate next, KeyVaultProvider keyVaultProvider, IMsalTokenCacheProvider msalTokenCacheProvider, DynamicCookieScheme dynamicCookieScheme)
+        // private readonly DynamicCookieScheme dynamicCookieScheme;
+
+        public ProxyAuthMiddleware(
+            RequestDelegate next,
+            KeyVaultProvider keyVaultProvider,
+            IMsalTokenCacheProvider msalTokenCacheProvider, IHttpClientFactory httpClientFactory)
         {
             _next = next;
             this.keyVaultProvider = keyVaultProvider;
             this.msalTokenCacheProvider = msalTokenCacheProvider;
-            this.dynamicCookieScheme = dynamicCookieScheme;
+            this.httpClientFactory = httpClientFactory;
+          //  this.dynamicCookieScheme = dynamicCookieScheme;
         }
 
         public async Task InvokeAsync(HttpContext ctx)
         {
+            if (ctx.Request.Path.Value.TrimEnd('/').EndsWith("/.auth/me"))
+            {
+                var schema = ProxyAuthMiddleware.AuthenticationSchema;
+
+                AuthenticationResult result = null;
+
+                var auth = await ctx.AuthenticateAsync(schema);
+                if (!auth.Succeeded)
+                {
+                    ctx.Response.StatusCode = 401;
+                    return;
+                }
+
+                var app = await RouteAuthorization.BuildAppAsync(
+                 new Uri(ctx.Request.GetDisplayUrl()).Host,
+                 auth.Principal.FindFirstValue("clientid"),
+                 msalTokenCacheProvider,
+                 keyVaultProvider
+                 );
+
+
+
+                var account = MsalAccount.FromMsalAccountId(auth.Principal.FindFirstValue("sub"));
+                // MsalAccount
+
+                try
+                {
+
+                    //var accounts = await app.GetAccountsAsync();
+
+                    result = await app.AcquireTokenSilent(new[] { "https://graph.microsoft.com/User.Read" }, account)
+                           .ExecuteAsync();
+                    
+
+
+                }
+                catch (MsalUiRequiredException ex)
+                {
+
+                    ctx.Response.StatusCode = 401;
+
+                    return;
+                }
+
+                var http = httpClientFactory.CreateClient();
+
+                var a = await http.SendAsync(new HttpRequestMessage(HttpMethod.Get,
+                    "https://graph.microsoft.com/beta/me/") { Headers = { { "Authorization", $"Bearer {result.AccessToken}" } } });
+
+                ctx.Response.StatusCode = (int)a.StatusCode;
+                ctx.Response.ContentType = a.Content.Headers.ContentType.ToString();
+                await a.Content.CopyToAsync(ctx.Response.Body);
+              
+
+
+                return;
+            }
+
             if (ctx.Request.Path.Value.EndsWith("callback"))
             {
                 var data = HttpUtility.ParseQueryString(Encoding.ASCII.GetString(Base64Url.Decode(ctx.Request.Query["state"].FirstOrDefault())));
-                var schema = await dynamicCookieScheme.EnsureAddedAsync(data["clientid"]);
+                var schema = ProxyAuthMiddleware.AuthenticationSchema;
                 var path = data["path"];
               //  var secret = await keyVaultProvider.GetValueAsync(data["clientid"]);
  
@@ -190,7 +256,7 @@ namespace DotNETDevOps.FrontDoor.RouterApp
             {
 
 
-                var schema = await dynamicCookieScheme.EnsureAddedAsync(ctx.Request.Query["clientid"].FirstOrDefault());
+                var schema = ProxyAuthMiddleware.AuthenticationSchema;
                 var aut = await ctx.AuthenticateAsync(schema);
                 if (aut.Succeeded)
                 {
@@ -226,7 +292,7 @@ namespace DotNETDevOps.FrontDoor.RouterApp
                 ctx.Response.Redirect(await RouteAuthorization.GetRedirectUrl(
                    ctx.Request.GetDisplayUrl(),
                     ctx.Request.Query["clientid"].FirstOrDefault(),
-                    ctx.Request.Query["redirectUri"].FirstOrDefault(), null));
+                    ctx.Request.Query["redirectUri"].FirstOrDefault(), new[] { "https://graph.microsoft.com/User.Read" }));
                
             }
 
