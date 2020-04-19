@@ -332,7 +332,7 @@ namespace DotNETDevOps.FrontDoor.RouterApp
 
             //  var configuration = document.HttpContext.RequestServices.GetRequiredService<IConfiguration>();
 
-            context.HttpContext.Response.Headers.Add("x-blobfind-version", version.Version);
+            context.HttpContext.Response.Headers["x-blobfind-version"] = version.Version;
 
             return proxyUrl + arguments[1].ToString() + "/" + version.Version +"/";
         }
