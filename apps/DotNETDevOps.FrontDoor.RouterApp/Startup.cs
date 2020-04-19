@@ -154,24 +154,30 @@ namespace DotNETDevOps.FrontDoor.RouterApp
 
             services.TryAddEnumerable(ServiceDescriptor.Singleton<IPostConfigureOptions<CookieAuthenticationOptions>, PostConfigureCookieAuthenticationOptions>());
             services.AddSingleton<DynamicCookieScheme>();
-            services.AddAuthentication();
+          
+            services.AddAuthentication()
+                
         //    services.AddTransient<CookieAuthenticationHandler>();
-            //    .AddCookie(ProxyAuthMiddleware.AuthenticationSchema, o =>
-            //{
-            //    o.Cookie.Name = ".auth-proxy";
-            //    o.Cookie.SameSite = SameSiteMode.Strict;
-            //    o.Cookie.Path = "/";
-            //    //  o.Cookie.Domain = "io-board.eu.ngrok.io";
-            //    o.SlidingExpiration = true;
-            //    o.ExpireTimeSpan = TimeSpan.FromDays(30);
+                .AddCookie(ProxyAuthMiddleware.AuthenticationSchema, o =>
+            {
+                o.Cookie.Name = ".auth-proxy";
+                o.Cookie.SameSite = SameSiteMode.Strict;
+             //   o.Cookie.Path = "/";
+                //  o.Cookie.Domain = "io-board.eu.ngrok.io";
+                o.SlidingExpiration = true;
+                o.ExpireTimeSpan = TimeSpan.FromDays(30);
+                o.Events.OnSigningIn = CookieSigningIn;
 
-
-            //})
+            })
                 ;
           //  services.AddScoped<DataPlatformConfidentialClientFactory>();
         }
 
-
+        private Task CookieSigningIn(CookieSigningInContext arg)
+        {
+            arg.CookieOptions.Path = arg.Properties.Parameters["path"] as string;
+            return Task.CompletedTask;
+        }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
@@ -197,7 +203,8 @@ namespace DotNETDevOps.FrontDoor.RouterApp
                 await r.Response.WriteAsync(JsonConvert.SerializeObject(r.RequestServices.GetRequiredService<IRouteOptionsFactory>().GetRoutes()));
             }));
 
-            app.Map("/.auth", app => app.UseMiddleware<ProxyAuthMiddleware>());
+            app.MapWhen(ctx=>ctx.Request.Path.Value.Contains( "/.auth/"),
+                app => app.UseMiddleware<ProxyAuthMiddleware>());
 
             //app.Use(async (ctx, next) =>
             //{

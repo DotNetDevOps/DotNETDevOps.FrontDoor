@@ -125,13 +125,15 @@ namespace DotNETDevOps.FrontDoor.RouterApp
             return app;
         }
 
-        public static async Task<string> GetRedirectUrl(string host,string clientid, string redirectUrl,string[] scopes)
+        public static async Task<string> GetRedirectUrl(string displayUrl,string clientid, string redirectUrl, string[] scopes)
         {
 
-            
+            var host = new Uri(displayUrl);
 
-            var app = await BuildAppAsync(host,clientid,null,null); 
-            var location=await    app.GetAuthorizationRequestUrl(scopes).WithExtraQueryParameters($"state={Base64Url.Encode(Encoding.ASCII.GetBytes($"redirectUrl={redirectUrl}&clientid={app.AppConfig.ClientId}"))}").ExecuteAsync();
+            
+            var app = await BuildAppAsync(host.Host,clientid,null,null); 
+            var location=await    app.GetAuthorizationRequestUrl(scopes)
+                .WithExtraQueryParameters($"state={Base64Url.Encode(Encoding.ASCII.GetBytes($"path={host.AbsolutePath.Substring(0,host.AbsolutePath.IndexOf(".auth/"))}&redirectUrl={redirectUrl}&clientid={app.AppConfig.ClientId}"))}").ExecuteAsync();
             return location.AbsoluteUri;
             
             
@@ -198,11 +200,11 @@ namespace DotNETDevOps.FrontDoor.RouterApp
         {
             if (!string.IsNullOrEmpty(Rewrite))
             {
-                var url = context.Request.GetDisplayUrl();
-
-                if (Regex.IsMatch(url, Rewrite.Split(' ').First()))
+                var url = new Uri(context.Request.GetDisplayUrl());
+                var path = url.AbsolutePath;
+                if (Regex.IsMatch(path, Rewrite.Split(' ').First()))
                 {
-                    var newUrl= Regex.Replace(url, Rewrite.Split(' ').First(), Rewrite.Split(' ').Last().Replace("$request_uri", url));
+                    var newUrl= Regex.Replace(path, Rewrite.Split(' ').First(), Rewrite.Split(' ').Skip(1).First().Replace("$request_uri", url.AbsoluteUri));
                     if (newUrl.StartsWith("/"))
                     {
                         context.Request.Path = newUrl;

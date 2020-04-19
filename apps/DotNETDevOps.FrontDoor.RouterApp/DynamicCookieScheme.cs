@@ -25,6 +25,7 @@ namespace DotNETDevOps.FrontDoor.RouterApp
 
         internal async Task<string> EnsureAddedAsync(string clientId)
         {
+            return ProxyAuthMiddleware.AuthenticationSchema;
             var schemename = $"ProxyAuth-{clientId}";
             
             var scheme = await schemeProvider.GetSchemeAsync(schemename);
