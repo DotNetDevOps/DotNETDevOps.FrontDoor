@@ -5,7 +5,7 @@
 
 name: '$(date:yyyyMMdd)$(rev:-rr)'
 trigger:
-  batch: true
+  batch: "true"
   branches:
     include:
     - master
@@ -39,7 +39,12 @@ stages:
 
     variables:
       buildConfiguration: 'Release'
-
+      isPre: true
+      Major: 1
+      Minor: 0
+      Patch: $[counter(format('{0}.{1}', variables['Major'], variables['Minor']), 0)]
+      PackageVersionType: "" #"-preview-$(Build.BuildNumber)"
+      PackageVersion: $(Major).$(Minor).$(Patch)$(PackageVersionType)
 
     steps:
     # .NET Core
@@ -57,20 +62,16 @@ stages:
         command: build
         projects: '**/*.csproj'
         configuration: '$(buildConfiguration)'
+
     - task: DotNetCoreCLI@2
       inputs:
         command: 'pack'
-        configuration: '$(buildConfiguration)'
-        packagesToPack: 'src/**/*.csproj' # Required when command == pack
-        packDirectory: '$(build.artifactStagingDirectory)' # Optional
-        #nobuild: false # Optional
-        #versioningScheme: 'off' # Options: off, byPrereleaseNumber, byEnvVar, byBuildNumber
-        #versionEnvVar: # Required when versioningScheme == byEnvVar
-        #majorVersion: '1' # Required when versioningScheme == byPrereleaseNumber
-        #minorVersion: '0' # Required when versioningScheme == byPrereleaseNumber
-        #patchVersion: '0' # Required when versioningScheme == byPrereleaseNumber
-        #buildProperties: # Optional
-        #verbosityPack: 'detailed' # Options: quiet, minimal, normal, detailed, diagnostic
+        packagesToPack: 'src/*.csproj'
+        arguments: '--configuration $(buildConfiguration)'
+        versioningScheme: byEnvVar
+        versionEnvVar: PackageVersion
+      displayName: 'dotnet pack $(buildConfiguration)'
+
     - task: DotNetCoreCLI@2
       displayName: Publish
       inputs:
@@ -79,9 +80,11 @@ stages:
         projects: 'functions/**/*.csproj'
         configuration: '$(buildConfiguration)'
         arguments: '--output $(Build.ArtifactStagingDirectory)'
-    - task: PublishPipelineArtifact@0
+
+    - task: PublishPipelineArtifact@1
+      displayName: Export
       inputs:
-        artifactName: 'drop'
+        artifact: 'drop'
         targetPath: '$(Build.ArtifactStagingDirectory)'
 
 - stage: 'DistributeFunctions'
@@ -93,11 +96,11 @@ stages:
       vmImage: 'windows-2019'
 
     steps:
-    - task: DownloadPipelineArtifact@1
+    - task: DownloadPipelineArtifact@2
       inputs:
-        buildType: 'current'
-        artifactName: 'drop'
-        targetPath: '$(System.ArtifactsDirectory)'
+        source: 'current'
+        artifact: 'drop'
+        path: '$(System.ArtifactsDirectory)'
 
     - task: VersionReaderTask@1
       inputs:
@@ -148,20 +151,20 @@ stages:
       vmImage: 'windows-2019'
     
     steps:
-    - task: DownloadPipelineArtifact@1
-      inputs:
-        buildType: 'current'
-        artifactName: 'drop'
-        targetPath: '$(System.ArtifactsDirectory)'
+    - task: DownloadPipelineArtifact@2
+      inputs:        
+        source: 'current'
+        artifact: 'drop'
+        path: '$(System.ArtifactsDirectory)'
 
-    - task: UpdateNugetPackageVersionsTask@1
-      inputs:
-        PackageFolder: '$(build.artifactStagingDirectory)'
-        PackageFeatureName: 'pre'
+#    - task: UpdateNugetPackageVersionsTask@1
+#      inputs:
+#        PackageFolder: '$(build.artifactStagingDirectory)'
+#        PackageFeatureName: 'pre'
            
-    - task: PublishPipelineArtifact@0
+    - task: PublishPipelineArtifact@1
       inputs:
-        artifactName: 'drop-ci'
+        artifact: 'drop-ci'
         targetPath: '$(Build.ArtifactStagingDirectory)'
 
     - task: NuGetCommand@2
