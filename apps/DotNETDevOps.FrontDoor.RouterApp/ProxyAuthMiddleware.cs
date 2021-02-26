@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.Identity.Client;
-using ProxyKit;
+
 using System;
 using System.Linq;
 using System.Net.Http;

@@ -1,7 +1,5 @@
-﻿using Azure.Core;
-using Azure.Security.KeyVault.Secrets;
-using DotNETDevOps.FrontDoor.AspNetCore;
-using DotNETDevOps.FrontDoor.RouterApp.Azure.Blob;
+﻿using DotNETDevOps.FrontDoor.AspNetCore;
+using DotNETDevOps.FrontDoor.RouterApp.Blob;
 using DotNETDevOps.JsonFunctions;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -20,63 +18,153 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Identity.Client;
+using Microsoft.ReverseProxy.Service.Proxy;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using ProxyKit;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Security.Claims;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using IHostingEnvironment = Microsoft.AspNetCore.Hosting.IHostingEnvironment;
 
 namespace DotNETDevOps.FrontDoor.RouterApp
 {
-    public class VaultTokenCredential : TokenCredential
+    public class CustomTransformer : HttpTransformer
     {
-        public override AccessToken GetToken(TokenRequestContext requestContext, CancellationToken cancellationToken)
+        private readonly BaseRoute config;
+        private readonly Stopwatch sw;
+        private TimeSpan timeToBuildForward;
+
+        public CustomTransformer(BaseRoute config)
         {
-            throw new NotImplementedException();
+            this.config = config;
+            sw = Stopwatch.StartNew();
+        }
+        private void AddHeaders(BaseRoute config, HttpResponseMessage response)
+        {
+            foreach (var header in config.Headers)
+            {
+                response.Headers.Add(header.Key, header.Value.AsEnumerable());
+            }
+          
         }
 
-        public override async ValueTask<AccessToken> GetTokenAsync(TokenRequestContext requestContext, CancellationToken cancellationToken)
+        public override async Task TransformRequestAsync(HttpContext context, HttpRequestMessage proxyRequest, string destinationPrefix)
         {
-            var app = new Microsoft.Azure.Services.AppAuthentication.AzureServiceTokenProvider();
-            var token = await app.GetAuthenticationResultAsync("https://vault.azure.net");
-            return new AccessToken(token.AccessToken, token.ExpiresOn);
 
+
+
+
+            await base.TransformRequestAsync(context, proxyRequest, destinationPrefix);
+
+
+            await config.ForwardAsync(context,proxyRequest);
+
+            if (config.Authoriztion != null && !string.IsNullOrEmpty(context.Items["forwardtoken"] as string))
+            {
+                proxyRequest.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", context.Items["forwardtoken"] as string);
+
+            }
+
+
+            timeToBuildForward = sw.Elapsed;
+
+            //Handle indexes 
+            //if (config.Index.Any() && proxyRequest.RequestUri.AbsolutePath.EndsWith("/"))
+            //{
+            //    var originalUri = proxyRequest.RequestUri;
+            //    var queue = new Queue<string>(config.Index);
+            //    while (queue.Any())
+            //    {
+            //        var index = queue.Dequeue();
+            //        UriBuilder builder = new UriBuilder(originalUri);
+            //        builder.Path += index;
+
+            //        proxyRequest.RequestUri = builder.Uri;
+
+
+            //       // var response = await forwarded
+            //      //      .Send();
+
+            //        if (response.IsSuccessStatusCode)
+            //        {
+            //            // response.Headers.Remove("X-ARR-SSL");
+            //            // response.Headers.Remove("X-AppService-Proto");
+            //            var totalTime = sw.Elapsed;
+            //            var sendtime = totalTime - timeToBuildForward;
+            //            response.Headers.Add("X-ROUTER-TIMINGS", $"{timeToBuildForward}/{sendtime}/{totalTime}");
+            //            return AddHeaders(config, response);
+            //        }
+            //        forwarded = await config.ForwardAsync(context);
+            //    }
+            //}
+
+            //  forwarded = await config.ForwardAsync(context);
+            {
+
+            //    var response = await forwarded
+              //           .Send();
+
+
+              
+            }
+
+          
         }
+        public override Task TransformResponseAsync(HttpContext context, HttpResponseMessage response)
+        {
+            // response.Headers.Remove("X-ARR-SSL");
+            // response.Headers.Remove("X-AppService-Proto");
+            var totalTime = sw.Elapsed;
+            var sendtime = totalTime - timeToBuildForward;
+
+            if (context.Request.Headers.ContainsKey("X-GET-BACKEND-ROUTE"))
+            {
+                context.Response.Headers.Add("X-BACKEND-ROUTE-STATUS-CODE", response.StatusCode.ToString());
+                foreach (var h in response.RequestMessage.Headers)
+                {
+                    try
+                    {
+                        context.Response.Headers.Add($"X-BACKEND-ROUTE-{h.Key}", string.Join(",", h.Value));
+                    }
+                    catch (Exception) { }
+                }
+
+            }
+
+            if (context.Request.Headers.ContainsKey("X-GET-ROUTER-TIMINGS"))
+            {
+                response.Headers.Add("X-ROUTER-TIMINGS", $"{timeToBuildForward}/{sendtime}/{totalTime}");
+
+            }
+
+
+
+            AddHeaders(config, response);
+
+            return base.TransformResponseAsync(context, response);
+        }
+
+        public override Task TransformResponseTrailersAsync(HttpContext httpContext, HttpResponseMessage proxyResponse)
+        {
+            return base.TransformResponseTrailersAsync(httpContext, proxyResponse);
+        }
+
     }
-    public class KeyVaultProvider 
-    {
-        private readonly VaultTokenCredential tokenCredential;
-        private readonly IConfiguration configuration;
 
-        public KeyVaultProvider(VaultTokenCredential tokenCredential , IConfiguration configuration)
-        {
-            this.tokenCredential = tokenCredential;
-            this.configuration = configuration;
-        }
-        public async Task<string> GetValueAsync(string name)
-        {
-
-
-            var client = new SecretClient(new Uri(configuration.GetValue<string>("VaultBaseURL")), tokenCredential);
-            var secret = await client.GetSecretAsync(name);
-            return secret.Value.Value;
-        }
-    }
+    
     public class Startup
     {
-        private readonly IHostingEnvironment hostingEnvironment;
+        private readonly IWebHostEnvironment hostingEnvironment;
         private readonly IConfiguration configuration;
 
-        public Startup(IHostingEnvironment hostingEnvironment, IConfiguration configuration)
+        public Startup(IWebHostEnvironment hostingEnvironment, IConfiguration configuration)
         {
             this.hostingEnvironment = hostingEnvironment;
             this.configuration = configuration;
@@ -93,7 +181,17 @@ namespace DotNETDevOps.FrontDoor.RouterApp
                 
             });
 
-            services.AddProxy();
+            var httpClient = new HttpMessageInvoker(new SocketsHttpHandler()
+            {
+                UseProxy = false,
+                AllowAutoRedirect = false,
+                AutomaticDecompression = DecompressionMethods.None,
+                UseCookies = false
+            });
+             
+            services.AddSingleton<HttpMessageInvoker>(httpClient);
+            services.AddHttpProxy();
+
             services.AddHttpClient("heathcheck");
             services.AddSingleton<HealthCheckRunner>();
               services.AddSingleton<IHostedService, HealthCheckRunner>(sp => sp.GetRequiredService<HealthCheckRunner>());
@@ -175,11 +273,12 @@ namespace DotNETDevOps.FrontDoor.RouterApp
 
         private Task CookieSigningIn(CookieSigningInContext arg)
         {
+            
             arg.CookieOptions.Path = arg.Properties.Parameters["path"] as string;
             return Task.CompletedTask;
         }
 
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             app.UseHealthChecks("/.well-known/ready", new HealthCheckOptions()
             {
@@ -231,12 +330,18 @@ namespace DotNETDevOps.FrontDoor.RouterApp
 
             if (env.IsDevelopment())
             {
-                app.RunProxy(context => context
-                    .ForwardTo("https://frontdoor-front.azurewebsites.net")
-                     .CopyXForwardedHeaders()
-                         .AddXForwardedHeaders()
-                         .ApplyCorrelationId()
-                    .Send());
+                app.Run(async ctx =>
+                {
+                    var proxy = ctx.RequestServices.GetRequiredService<IHttpProxy>();
+                    await proxy.ProxyAsync(ctx, "https://frontdoor-front.azurewebsites.net", ctx.RequestServices.GetRequiredService<HttpMessageInvoker>());
+
+                });
+                //app.RunProxy(context => context
+                //    .ForwardTo("https://frontdoor-front.azurewebsites.net")
+                //     .CopyXForwardedHeaders()
+                //         .AddXForwardedHeaders()
+                //         .ApplyCorrelationId()
+                //    .Send());
             }
 
 
@@ -291,103 +396,21 @@ namespace DotNETDevOps.FrontDoor.RouterApp
            
 
 
-            app.RunProxy(BuildProxy);
+            app.Run(BuildProxy);
         }
 
-        private async Task<HttpResponseMessage> BuildProxy(HttpContext context)
+        private async Task BuildProxy(HttpContext context)
         {
-           
-            var config = context.Features.Get<BaseRoute>();
-           
-
-          
-
-            var sw = Stopwatch.StartNew();
-            var forwarded = await config.ForwardAsync(context);
-
-            if (config.Authoriztion != null && !string.IsNullOrEmpty(context.Items["forwardtoken"] as string))
-            {
-                forwarded.UpstreamRequest.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", context.Items["forwardtoken"] as string);
-                
-            }
+            var proxy = context.RequestServices.GetRequiredService<IHttpProxy>();
+            var http = context.RequestServices.GetRequiredService<HttpMessageInvoker>();
 
 
-            var timeToBuildForward = sw.Elapsed;
+            await proxy.ProxyAsync(context,"https://example.com", http, new RequestProxyOptions { }, new CustomTransformer(context.Features.Get<BaseRoute>()));
 
-            //Handle indexes 
-            if (config.Index.Any() && forwarded.UpstreamRequest.RequestUri.AbsolutePath.EndsWith("/"))
-            {
-                var originalUri = forwarded.UpstreamRequest.RequestUri;
-                var queue = new Queue<string>(config.Index);
-                while (queue.Any())
-                {
-                    var index = queue.Dequeue();
-                    UriBuilder builder = new UriBuilder(originalUri);
-                    builder.Path += index;
-
-                    forwarded.UpstreamRequest.RequestUri = builder.Uri;
-
-                    var response = await forwarded
-                        .Send();
-
-                    if (response.IsSuccessStatusCode)
-                    {
-                        // response.Headers.Remove("X-ARR-SSL");
-                        // response.Headers.Remove("X-AppService-Proto");
-                        var totalTime = sw.Elapsed;
-                        var sendtime = totalTime - timeToBuildForward;
-                        response.Headers.Add("X-ROUTER-TIMINGS", $"{timeToBuildForward}/{sendtime}/{totalTime}");
-                        return AddHeaders(config, response);
-                    }
-                    forwarded = await config.ForwardAsync(context);
-                }
-            }
-
-          //  forwarded = await config.ForwardAsync(context);
-            {
-
-                var response = await forwarded
-                         .Send();
-
-
-                // response.Headers.Remove("X-ARR-SSL");
-                // response.Headers.Remove("X-AppService-Proto");
-                var totalTime = sw.Elapsed;
-                var sendtime = totalTime - timeToBuildForward;
-                
-                if (context.Request.Headers.ContainsKey("X-GET-BACKEND-ROUTE"))
-                {
-                    context.Response.Headers.Add("X-BACKEND-ROUTE-STATUS-CODE", response.StatusCode.ToString());
-                    foreach(var h in response.RequestMessage.Headers)
-                    {
-                        try
-                        {
-                            context.Response.Headers.Add($"X-BACKEND-ROUTE-{h.Key}",string.Join("," , h.Value));
-                        }catch(Exception) { }
-                    }
-                  
-                }
-
-                if (context.Request.Headers.ContainsKey("X-GET-ROUTER-TIMINGS"))
-                {
-                    response.Headers.Add("X-ROUTER-TIMINGS", $"{timeToBuildForward}/{sendtime}/{totalTime}");
-
-                }
-
-                 
-               
-                return AddHeaders(config, response);
-            }
+         
         }
 
-        private HttpResponseMessage AddHeaders(BaseRoute config, HttpResponseMessage response)
-        {
-            foreach(var header in config.Headers)
-            {
-                response.Headers.Add(header.Key, header.Value.AsEnumerable());
-            }
-            return response;
-        }
+      
 
         private bool MatchRoutes(HttpContext context)
         {

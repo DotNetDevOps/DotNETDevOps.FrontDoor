@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using System;
 using System.IO;
@@ -9,9 +10,9 @@ namespace DotNETDevOps.FrontDoor.RouterApp
 {
     public class FileSystemRouteOptionsFactory : DefaultRouteOptionsFactory
     {
-        private readonly IHostingEnvironment hostingEnvironment;
+        private readonly IWebHostEnvironment hostingEnvironment;
 
-        public FileSystemRouteOptionsFactory(ILogger<FileSystemRouteOptionsFactory> logger, IHostingEnvironment hostingEnvironment, HealthCheckRunner healthCheckRunner) : base(logger, healthCheckRunner) { 
+        public FileSystemRouteOptionsFactory(ILogger<FileSystemRouteOptionsFactory> logger, IWebHostEnvironment hostingEnvironment, HealthCheckRunner healthCheckRunner) : base(logger, healthCheckRunner) { 
             this.hostingEnvironment = hostingEnvironment;
         }
         public override async Task<JToken> GetRouteConfiguration()

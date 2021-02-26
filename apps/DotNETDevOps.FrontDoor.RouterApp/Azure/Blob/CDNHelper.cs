@@ -1,12 +1,12 @@
-﻿using Microsoft.Extensions.Caching.Memory;
-using Microsoft.WindowsAzure.Storage.Blob;
+﻿using Azure.Storage.Blobs;
+using Microsoft.Extensions.Caching.Memory;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DotNETDevOps.FrontDoor.RouterApp.Azure.Blob
+namespace DotNETDevOps.FrontDoor.RouterApp.Blob
 {
     public static class SemanticVersionEx
     {
@@ -123,29 +123,41 @@ namespace DotNETDevOps.FrontDoor.RouterApp.Azure.Blob
                   .SetSlidingExpiration(TimeSpan.FromSeconds(60))
                   // Remove from cache after this time, regardless of sliding expiration
                   .SetAbsoluteExpiration(TimeSpan.FromSeconds(60 * 5));
-
-            var blob = new CloudBlobContainer(new Uri(url));
+            
+            var blob = new BlobContainerClient(new Uri(url));
+             
+            
+            //  var blob = new CloudBlobContainer(new Uri(url));
             if (!await blob.ExistsAsync())
             {
                 return null;
             }
-            var versions = await blob.ListBlobsSegmentedAsync($"{lib}/", null);
-
-
-
-            var sems = versions.Results.OfType<CloudBlobDirectory>()
+            var versions = blob.GetBlobsByHierarchyAsync( Azure.Storage.Blobs.Models.BlobTraits.None, Azure.Storage.Blobs.Models.BlobStates.None,"/",$"{lib}/");
+         
+             await foreach(var result in versions
+                .Where(c=>c.IsPrefix)
                 .Where(c => SemanticVersion.TryParse(c.Prefix.Split(splits, StringSplitOptions.RemoveEmptyEntries).Last(), out SemanticVersion semver) && semver.Satisfies(filter) && (string.IsNullOrEmpty(prerelease) || string.IsNullOrEmpty(semver.SpecialVersion) || semver.SpecialVersion.StartsWith(prerelease)))
                 .OrderByDescending(c => new SemanticVersion(c.Prefix.Split(splits, StringSplitOptions.RemoveEmptyEntries).Last()))
-                .ToArray();
-            if (!sems.Any())
+                )
             {
-                return null;
+                return new LibVersion { Version = result.Prefix.Split(splits, StringSplitOptions.RemoveEmptyEntries).Last() };
             }
+
+            return null;
+
+            //var sems = versions.Results.OfType<CloudBlobDirectory>()
+            //    .Where(c => SemanticVersion.TryParse(c.Prefix.Split(splits, StringSplitOptions.RemoveEmptyEntries).Last(), out SemanticVersion semver) && semver.Satisfies(filter) && (string.IsNullOrEmpty(prerelease) || string.IsNullOrEmpty(semver.SpecialVersion) || semver.SpecialVersion.StartsWith(prerelease)))
+            //    .OrderByDescending(c => new SemanticVersion(c.Prefix.Split(splits, StringSplitOptions.RemoveEmptyEntries).Last()))
+            //    .ToArray();
+            //if (!sems.Any())
+            //{
+            //    return null;
+            //}
 
                                
           
 
-            return new LibVersion { Version = sems.FirstOrDefault().Prefix.Split(splits, StringSplitOptions.RemoveEmptyEntries).Last() };
+            //return new LibVersion { Version = sems.FirstOrDefault().Prefix.Split(splits, StringSplitOptions.RemoveEmptyEntries).Last() };
         }
     }
 }

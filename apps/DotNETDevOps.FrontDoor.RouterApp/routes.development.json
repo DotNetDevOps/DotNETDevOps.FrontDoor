@@ -223,6 +223,10 @@
         {
           "route": "~* ^/(subscriptions/[^/]+/)?providers/(smscph.gateway)",
           "proxy_pass": "http://localhost:7071/"
+        },
+        {
+          "route": "~* ^/(subscriptions/[^/]+/)?providers/(io-board.replymaster)",
+          "proxy_pass": "http://localhost:6553/"
         }
       ]
     },

@@ -1,4 +1,5 @@
-﻿using DotNETDevOps.FrontDoor.RouterApp.Azure.Blob;
+﻿
+using DotNETDevOps.FrontDoor.RouterApp.Blob;
 using DotNETDevOps.JsonFunctions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
@@ -11,7 +12,6 @@ using Microsoft.Extensions.Primitives;
 using Microsoft.Identity.Client;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using ProxyKit;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -225,7 +225,8 @@ namespace DotNETDevOps.FrontDoor.RouterApp
 
            
         }
-        public async Task<ForwardContext> ForwardAsync(HttpContext context)
+        
+        public async Task ForwardAsync(HttpContext context, HttpRequestMessage proxyRequest)
         {
             // ExpressionContext expressionContext = null;
             var ex = context.Features.Get<ExpressionParser<ExpressionContext>>();
@@ -251,18 +252,28 @@ namespace DotNETDevOps.FrontDoor.RouterApp
 
             RewriteUrl(context);
 
-            
-            
-          
-            var forwarded = context
-                    .ForwardTo(proxyUrl)
-                   // .CopyXForwardedHeaders()
-                    .AddXForwardedHeaders()
-                    .ApplyCorrelationId();
+            var upstreamHost = new Uri(proxyUrl);
+
+            var uri = new Uri(UriHelper.BuildAbsolute(
+               upstreamHost.Scheme,
+               HostString.FromUriComponent(upstreamHost),
+               PathString.FromUriComponent(upstreamHost),
+               context.Request.Path,
+               context.Request.QueryString));
+
+            proxyRequest.Headers.Host = uri.Authority;
+            proxyRequest.RequestUri = uri;
+ 
+
+            //var forwarded = context
+            //        .ForwardTo(proxyUrl)
+            //       // .CopyXForwardedHeaders()
+            //        .AddXForwardedHeaders()
+            //        .ApplyCorrelationId();
 
             foreach (var h in ProxySetHeader)
             {
-                forwarded.UpstreamRequest.Headers.Add(h.Key, h.Value);
+                proxyRequest.Headers.Add(h.Key, h.Value);
             }
 
 
@@ -283,7 +294,7 @@ namespace DotNETDevOps.FrontDoor.RouterApp
 
                     var functionTokenRsp = await http.SendAsync(req);
                     var functionToken = await functionTokenRsp.Content.ReadAsStringAsync();
-                    forwarded.UpstreamRequest.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", functionToken.Trim('"'));
+                    proxyRequest.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", functionToken.Trim('"'));
 
                 }
 
@@ -292,10 +303,10 @@ namespace DotNETDevOps.FrontDoor.RouterApp
             if (context.Request.Headers.ContainsKey("X-GET-BACKEND-ROUTE"))
             {
                 context.Response.Headers.Add("X-BACKEND-ROUTE-HOST", proxyUrl);
-                context.Response.Headers.Add("X-BACKEND-ROUTE-URI", forwarded.UpstreamRequest.RequestUri.ToString());
+                context.Response.Headers.Add("X-BACKEND-ROUTE-URI", proxyRequest.RequestUri.ToString());
             }
 
-            return forwarded;
+          
         }
 
         public ExpressionParser<ExpressionContext>.ExpressionFunction Get(string name)
