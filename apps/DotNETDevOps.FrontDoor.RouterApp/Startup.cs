@@ -38,12 +38,14 @@ namespace DotNETDevOps.FrontDoor.RouterApp
     public class CustomTransformer : HttpTransformer
     {
         private readonly BaseRoute config;
+        private readonly IHttpClientFactory httpClientFactory;
         private readonly Stopwatch sw;
         private TimeSpan timeToBuildForward;
 
-        public CustomTransformer(BaseRoute config)
+        public CustomTransformer(BaseRoute config, IHttpClientFactory  httpClientFactory)
         {
-            this.config = config;
+            this.config = config ?? throw new ArgumentNullException(nameof(config));
+            this.httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
             sw = Stopwatch.StartNew();
         }
         private void AddHeaders(BaseRoute config, HttpResponseMessage response)
@@ -64,7 +66,7 @@ namespace DotNETDevOps.FrontDoor.RouterApp
             await base.TransformRequestAsync(context, proxyRequest, destinationPrefix);
 
 
-            await config.ForwardAsync(context,proxyRequest);
+            await config.ForwardAsync(context, proxyRequest);
 
             if (config.Authoriztion != null && !string.IsNullOrEmpty(context.Items["forwardtoken"] as string))
             {
@@ -72,8 +74,35 @@ namespace DotNETDevOps.FrontDoor.RouterApp
 
             }
 
+            if (config.Index.Any() && proxyRequest.RequestUri.AbsolutePath.EndsWith("/"))
+            {
+                var http = httpClientFactory.CreateClient("indexfetcher");
+                var originalUri = proxyRequest.RequestUri;
+                var queue = new Queue<string>(config.Index);
+                while (queue.Any())
+                {
+                    var index = queue.Dequeue();
+                    UriBuilder builder = new UriBuilder(originalUri);
+                    builder.Path += index;
 
-            timeToBuildForward = sw.Elapsed;
+                    var head = new HttpRequestMessage(HttpMethod.Head, builder.Uri);
+                    foreach (var h in proxyRequest.Headers)
+                        head.Headers.TryAddWithoutValidation(h.Key, h.Value);
+
+                    var exists = await http.SendAsync(head);
+                    if (exists.IsSuccessStatusCode)
+                    {
+                        proxyRequest.RequestUri = builder.Uri;
+                        break;
+                    }
+
+
+                }
+
+            }
+
+
+                timeToBuildForward = sw.Elapsed;
 
             //Handle indexes 
             //if (config.Index.Any() && proxyRequest.RequestUri.AbsolutePath.EndsWith("/"))
@@ -192,6 +221,7 @@ namespace DotNETDevOps.FrontDoor.RouterApp
             services.AddSingleton<HttpMessageInvoker>(httpClient);
             services.AddHttpProxy();
 
+            services.AddHttpClient("indexfetcher");
             services.AddHttpClient("heathcheck");
             services.AddSingleton<HealthCheckRunner>();
               services.AddSingleton<IHostedService, HealthCheckRunner>(sp => sp.GetRequiredService<HealthCheckRunner>());
@@ -405,7 +435,8 @@ namespace DotNETDevOps.FrontDoor.RouterApp
             var http = context.RequestServices.GetRequiredService<HttpMessageInvoker>();
 
 
-            await proxy.ProxyAsync(context,"https://example.com", http, new RequestProxyOptions { }, new CustomTransformer(context.Features.Get<BaseRoute>()));
+            await proxy.ProxyAsync(context,"https://example.com", http, new RequestProxyOptions { },
+                new CustomTransformer(context.Features.Get<BaseRoute>(),context.RequestServices.GetRequiredService< IHttpClientFactory>()));
 
          
         }
